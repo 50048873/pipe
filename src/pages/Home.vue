@@ -1,5 +1,5 @@
 <template>
-  <div class="page home">
+  <div class="page page-hasFooter home">
     <nav>
       <div class="item">
         <span><i class="hui-icon-gclb"></i></span>

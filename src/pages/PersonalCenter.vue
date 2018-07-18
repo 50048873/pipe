@@ -1,5 +1,5 @@
 <template>
-  <div class="page personalCenter">
+  <div class="page page-hasFooter personalCenter">
     <div class="nameWrap">
       <span class="headPortrait" :style="getHeadPortrait()"></span>
       <span class="name">姓名</span>

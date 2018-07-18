@@ -1,5 +1,5 @@
 <template>
-  <div class="page message">
+  <div class="page page-hasFooter message">
     <div class="searchWrap">
       <search></search>
     </div>
@@ -10,9 +10,10 @@
         </div>
         <div class="titleWrap">
           <h6>
-            <span>标题标题<b class="redDot"></b></span>
+            <span class="title">标题标题</span>
+            <span class="redDot"></span>
           </h6>
-          <p>描叙描叙描叙描叙描叙描叙描叙描叙描叙描叙描叙描叙描叙描叙描叙描叙描叙描叙描叙描叙</p>
+          <p>描叙描叙</p>
         </div>
         <div class="detailWrap">
           <div class="time">12-23 13:00</div>
@@ -45,14 +46,14 @@ export default {
   @import '../assets/less/variable.less';
   .message {
     .searchWrap {
-      margin: 15px;
+      margin: 10px 15px;
     }
     ul {
       li {
-        display: flex;
         padding: 15px;
         background-color: white;
         .iconWrap {
+          float: left;
           width: 40px;
           height: 40px;
           display: inline-flex;
@@ -61,23 +62,30 @@ export default {
           background-color: @color-theme;
           border-radius: 50%;
           i {
-            font-size: 28px;
+            font-size: 24px;
             color: white;
           }
         }
         .titleWrap {
-          flex: 1;
+          display: inline-flex;
+          width: calc(100% - 55px - 80px);
+          height: 40px;
           margin-left: 8px;
-          padding-right: 15px;
-          white-space: nowrap;
-          overflow: hidden;
+          margin-right: 15px;
+          flex-direction: column;
+          justify-content: space-between;
           h6 {
+            display: inline-block;
             font-size: 16px;
             font-weight: bold;
             line-height: 1;
-            margin-bottom: 10px;
-            text-overflow: ellipsis;
-            overflow: hidden;
+            .title {
+              display: inline-block;
+              max-width: 90%;
+              white-space: nowrap;
+              text-overflow: ellipsis;
+              overflow: hidden;
+            }
             .redDot {
               position: absolute;
               width: 8px;
@@ -93,14 +101,22 @@ export default {
             line-height: 1;
             text-overflow: ellipsis;
             overflow: hidden;
+            white-space: nowrap;
           }
         }
         .detailWrap {
-          display: flex;
-          flex-direction: column;
-          justify-content: space-between;
+          position: absolute;
+          top: 50%;
+          right: 15px;
           font-size: 12px;
           text-align: right;
+          transform: translateY(-50%);
+          .time {
+            margin-bottom: 4px;
+          }
+        }
+        &:hover {
+          opacity: 0.8;
         }
       }
     }

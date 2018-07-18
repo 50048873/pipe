@@ -24,26 +24,35 @@
     </ul>
     <div class="hiddenDangerDes">
       <h6>隐患描述</h6>
-      <textarea></textarea>
+      <textarea @focus="focus"></textarea>
     </div>
     <div class="reasonNoAccept">
       <h6>不接受工作原因</h6>
-      <textarea></textarea>
+      <textarea @focus="focus"></textarea>
     </div>
     <div class="btnWrap">
-      <a href="javascript:;" class="btn btn-info">接受</a>
-      <a href="javascript:;" class="btn btn-plain-warn">不接受</a>
+      <a href="javascript:;" class="btn btn-primary">接受</a>
+      <a href="javascript:;" class="btn btn-primary">不接受</a>
     </div>
   </div>
 </template>
 
 <script>
+import {addAndroidInputBugFixEvent, removeAndroidInputBugFixEvent} from 'hui/lib/util'
 export default {
   props: {
     id: {
       type: String,
       required: true
     }
+  },
+  methods: {
+    focus () {
+      addAndroidInputBugFixEvent()
+    }
+  },
+  beforeDestroy () {
+    removeAndroidInputBugFixEvent()
   }
 }
 </script>
@@ -57,9 +66,15 @@ export default {
     ul {
       li {
         display: flex;
+        height: 50px;
         justify-content: space-between;
-        padding: 15px;
+        align-items: center;
+        padding: 0 15px;
         background-color: white;
+        [class^="hui-icon"] {
+          font-size: 24px;
+          color: @color-theme;
+        }
       }
     }
     .hiddenDangerDes, .reasonNoAccept {
@@ -70,9 +85,25 @@ export default {
       textarea {
         display: block;
         width: 100%;
-        height: 96px;
+        height: 100px;
         resize: none;
         border: 1px solid @color-border-default;
+        line-height: 1.5;
+        padding: 5px;
+        box-sizing: border-box;
+      }
+    }
+    .btnWrap {
+      display: flex;
+      margin: 0 15px 15px;
+      .btn {
+        flex: 1;
+        &:first-child {
+          margin-right: 8px;
+        }
+        &:last-child {
+          margin-left: 8px;
+        }
       }
     }
   }
