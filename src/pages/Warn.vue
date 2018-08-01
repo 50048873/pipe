@@ -20,7 +20,7 @@
         <div class="titleWrap">
           <h6>
             <span class="title">标题标题</span>
-            <span class="urgent red"><i>紧急</i></span>
+            <span class="urgent color-red"><i>紧急</i></span>
           </h6>
           <p>2018-05-24 22:21</p>
         </div>
@@ -33,7 +33,7 @@
         <div class="titleWrap">
           <h6>
             <span class="title">标题标题</span>
-            <span class="urgent warn"><i>较急</i></span>
+            <span class="urgent color-warn"><i>较急</i></span>
           </h6>
           <p>2018-05-24 22:21</p>
         </div>
@@ -46,7 +46,7 @@
         <div class="titleWrap">
           <h6>
             <span class="title">标题标题</span>
-            <span class="urgent normal"><i>一般</i></span>
+            <span class="urgent color-normal"><i>一般</i></span>
           </h6>
           <p>2018-05-24 22:21</p>
         </div>

@@ -5,4 +5,6 @@ import 'hui/src/assets/font-hui/style.css'
 export default () => {
   Vue.use(Hui.RouterviewSlide)
   Vue.use(Hui.Nav3)
+  Vue.use(Hui.Message)
+  Vue.use(Hui.Uploader)
 }

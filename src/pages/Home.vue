@@ -3,23 +3,23 @@
     <nav>
       <div class="item">
         <span><i class="hui-icon-gclb"></i></span>
-        <span>管网信息</span>
+        <router-link to="/pipeInfo" tag="span">管网信息</router-link>
       </div>
       <div class="item">
         <span><i class="hui-icon-gclb"></i></span>
-        <span>管网监测</span>
+        <router-link to="/pipeMonitor" tag="span">管网监测</router-link>
       </div>
       <div class="item">
         <span><i class="hui-icon-gclb"></i></span>
-        <span>分区计量</span>
+        <router-link to="/pipeCalc" tag="span">分区计量</router-link>
       </div>
       <div class="item">
         <span><i class="hui-icon-gclb"></i></span>
-        <span>巡检抢修</span>
+        <router-link to="/pipeFix" tag="span">巡检抢修</router-link>
       </div>
       <div class="item">
         <span><i class="hui-icon-gclb"></i></span>
-        <span>统计分析</span>
+        <router-link to="/pipeAnalyze" tag="span">统计分析</router-link>
       </div>
     </nav>
   </div>
@@ -74,6 +74,9 @@ export default {
         }
         &:last-child {
           margin-bottom: 15px;
+        }
+        &:hover {
+          opacity: 0.8;
         }
       }
     }

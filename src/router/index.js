@@ -6,6 +6,12 @@ import WarnDetail from '@/pages/WarnDetail'
 import Message from '@/pages/Message'
 import MessageDetail from '@/pages/MessageDetail'
 import PersonalCenter from '@/pages/PersonalCenter'
+import PipeInfo from '@/pages/PipeInfo'
+import PipeMonitor from '@/pages/PipeMonitor'
+import PipeCalc from '@/pages/PipeCalc'
+import PipeFix from '@/pages/PipeFix'
+import PipeFixHiddenTrouble from '@/pages/PipeFixHiddenTrouble'
+import PipeAnalyze from '@/pages/PipeAnalyze'
 
 Vue.use(Router)
 
@@ -23,6 +29,57 @@ let routes = new Router({
       component: Home,
       meta: {
         title: '管网管理'
+      }
+    },
+    {
+      path: '/pipeInfo',
+      name: 'PipeInfo',
+      component: PipeInfo,
+      meta: {
+        title: '管网信息'
+      }
+    },
+    {
+      path: '/pipeMonitor',
+      name: 'PipeMonitor',
+      component: PipeMonitor,
+      meta: {
+        title: '管网监测'
+      }
+    },
+    {
+      path: '/pipeCalc',
+      name: 'PipeCalc',
+      component: PipeCalc,
+      meta: {
+        title: '分区计量'
+      }
+    },
+    {
+      path: '/pipeFix',
+      redirect: '/pipeFix/hiddenTrouble',
+      name: 'PipeFix',
+      component: PipeFix,
+      meta: {
+        title: '巡检抢修'
+      },
+      children: [
+        {
+          path: '/pipeFix/hiddenTrouble',
+          name: 'PipeFixHiddenTrouble',
+          component: PipeFixHiddenTrouble,
+          meta: {
+            title: '巡检上报'
+          }
+        }
+      ]
+    },
+    {
+      path: '/pipeAnalyze',
+      name: 'PipeAnalyze',
+      component: PipeAnalyze,
+      meta: {
+        title: '统计分析'
       }
     },
     {

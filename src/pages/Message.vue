@@ -18,7 +18,7 @@
         <div class="detailWrap">
           <div class="time">12-23 13:00</div>
           <div class="detail">
-            <a href="javascript:;" class="btn btn-plain-warn">查看详情</a>
+            <a href="javascript:;" class="btn btn-mini btn-plain color-warn">查看详情</a>
           </div>
         </div>
       </li>

@@ -31,8 +31,8 @@
       <textarea @focus="focus"></textarea>
     </div>
     <div class="btnWrap">
-      <a href="javascript:;" class="btn btn-primary">接受</a>
-      <a href="javascript:;" class="btn btn-primary">不接受</a>
+      <a href="javascript:;" class="btn color-theme">接受</a>
+      <a href="javascript:;" class="btn color-theme">不接受</a>
     </div>
   </div>
 </template>
