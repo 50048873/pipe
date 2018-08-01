@@ -3,6 +3,7 @@ node_modules/
 /dist/
 /资料/
 /备份/
+/static/arcgis_js_api/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
