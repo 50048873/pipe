@@ -7,4 +7,5 @@ export default () => {
   Vue.use(Hui.Nav3)
   Vue.use(Hui.Message)
   Vue.use(Hui.Uploader)
+  Vue.use(Hui.FloatBall)
 }

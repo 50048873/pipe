@@ -29,7 +29,7 @@
           </li>
         </ul>
         <div class="weui-uploader__input-box">
-          <input ref="uploaderInput" class="weui-uploader__input" type="file" accept="image/png, image/jpeg, image/gif, image/jpg" multiple>
+          <input ref="uploaderInput" class="weui-uploader__input" type="file" accept="image/*">
         </div>
       </div>
     </div>
@@ -135,6 +135,7 @@ export default {
     fileChange () {
       let uploaderInput = this.$refs.uploaderInput
       uploaderInput.addEventListener('change', (e) => {
+        console.log(111)
         let maxSize = this.maxSize
         let maxCount = this.maxCount
         let files = e.target.files

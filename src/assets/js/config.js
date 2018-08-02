@@ -6,7 +6,6 @@ export const baseUrl = 'http://www.whdse.cn:56015'
 
 // 跨域开发接口（还未配置）
 // export const baseUrl = process.env.API_HOST
-console.log(baseUrl)
 
 // 路径
 export const path = ''

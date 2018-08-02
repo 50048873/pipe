@@ -11,19 +11,19 @@
       <div class="item-group line-bottom">
         <h6>隐患名称</h6>
         <div>
-          <input type="text" value="临河大道管线爆管" required v-model="params.yhmc">
+          <input type="text" placeholder="请输入隐患名称" required v-model="params.yhmc">
         </div>
       </div>
       <div class="item-group line-bottom">
         <h6>设备编号</h6>
         <div>
-          <input type="text" value="NXST-JS0001" v-model="params.sbbh">
+          <input type="text" placeholder="请输入设备编号" v-model="params.sbbh">
         </div>
       </div>
       <div class="item-group line-bottom">
         <h6>设备名称</h6>
         <div>
-          <input type="text" value="管道" required v-model="params.sbmc">
+          <input type="text" placeholder="请输入设备名称" required v-model="params.sbmc">
         </div>
       </div>
       <div class="item-group line-bottom">
@@ -45,7 +45,7 @@
       </div>
       <div class="hiddenTrouble">
         <h6>隐患描述</h6>
-        <textarea placeholder="请输入隐患描述" v-model="params.yhmx"></textarea>
+        <textarea placeholder="请输入隐患描述" v-model="params.yhmx" @focus="focus"></textarea>
         <p class="explain">至少10个字符，已输入{{params.yhmx.length}}个字符</p>
       </div>
 
@@ -62,7 +62,9 @@
 import {getServerErrorMessageAsHtml, getUuid} from 'hui/lib/util.js'
 import * as api from '@/assets/js/api'
 import {success} from '@/assets/js/config'
+import {androidInputBugFixEvent} from '@/assets/js/mixin'
 export default {
+  mixins: [androidInputBugFixEvent],
   data () {
     return {
       params: {
@@ -153,85 +155,4 @@ export default {
 
 <style scoped lang="less">
   @import '../assets/less/variable.less';
-  .form {
-    padding: 10px 0;
-    .item-group {
-      display: flex;
-      padding: 10px;
-      background-color: white;
-      > div {
-        flex: 1;
-        text-align: right;
-        input {
-          text-align: right;
-        }
-      }
-      .iconWrap {
-        [class*="hui-icon"] {
-          color: @color-theme;
-        }
-      }
-      .urgentGrade {
-        .radio-item {
-          display: inline-block;
-          input {
-            position: absolute;
-            width: 54px;
-            height: 28px;
-            z-index: 1;
-            opacity: 0;
-          }
-          #red {
-            &:checked + .btn {
-              color: white;
-              background-color: @color-red;
-            }
-          }
-          #warn {
-            &:checked + .btn {
-              color: white;
-              background-color: @color-warn;
-            }
-          }
-          #normal {
-            &:checked + .btn {
-              color: white;
-              background-color: @color-normal;
-            }
-          }
-        }
-      }
-    }
-    .hiddenTrouble {
-      padding: 10px;
-      h6 {
-        padding-bottom: 5px;
-      }
-      textarea {
-        display: block;
-        border: 0;
-        resize: none;
-        width: 100%;
-        height: 110px;
-        padding: 10px;
-        color: inherit;
-        font-size: 1em;
-        line-height: inherit;
-        outline: 0;
-        -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
-        box-sizing: border-box;
-      }
-      .explain {
-        text-align: right;
-        line-height: 2;
-        font-size: 10px;
-      }
-    }
-    .huiUploaderWrap {
-      padding: 0 10px;
-    }
-    .submitWrap {
-      margin: 10px;
-    }
-  }
 </style>

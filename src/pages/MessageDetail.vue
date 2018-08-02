@@ -38,7 +38,7 @@
 </template>
 
 <script>
-import {addAndroidInputBugFixEvent, removeAndroidInputBugFixEvent} from 'hui/lib/util'
+import {androidInputBugFixEvent} from '@/assets/js/mixin'
 export default {
   props: {
     id: {
@@ -46,14 +46,7 @@ export default {
       required: true
     }
   },
-  methods: {
-    focus () {
-      addAndroidInputBugFixEvent()
-    }
-  },
-  beforeDestroy () {
-    removeAndroidInputBugFixEvent()
-  }
+  mixins: [androidInputBugFixEvent]
 }
 </script>
 
