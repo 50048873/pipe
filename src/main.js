@@ -4,10 +4,15 @@ import Vue from 'vue'
 import App from './App'
 import router from './router'
 
+// import VConsole from 'vconsole'
+
 import '@/assets/less/common.less'
 
 import useHui from '@/assets/js/useHui'
 useHui()
+
+/* eslint-disable no-new */
+// new VConsole()
 
 Vue.config.productionTip = false
 

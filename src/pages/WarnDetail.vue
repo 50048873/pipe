@@ -34,34 +34,12 @@
       </li>
     </ul>
     <h3>现场照片</h3>
-    <div class="line-top line-bottom">
-      <ul class="photos clearfix">
-        <li v-for="(item, index) in photos" :key="index">
-          <span class="photoWrap" :style="getBg(item.url)"></span>
-        </li>
-      </ul>
-    </div>
+    <photo></photo>
   </div>
 </template>
 
 <script>
-let photos = [
-  {
-    url: '/static/img/example-1.jpg'
-  },
-  {
-    url: '/static/img/example-1.jpg'
-  },
-  {
-    url: '/static/img/example-1.jpg'
-  },
-  {
-    url: '/static/img/example-1.jpg'
-  },
-  {
-    url: '/static/img/example-1.jpg'
-  }
-]
+import Photo from '@/components/Photo'
 export default {
   props: {
     id: {
@@ -69,17 +47,8 @@ export default {
       required: true
     }
   },
-  data () {
-    return {
-      photos: photos
-    }
-  },
-  methods: {
-    getBg (url) {
-      return {
-        backgroundImage: `url(${url})`
-      }
-    }
+  components: {
+    Photo
   }
 }
 </script>
