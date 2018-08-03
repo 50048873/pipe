@@ -14,9 +14,11 @@
   },
   "dependencies": {
     "esri-loader": "^2.4.0",
+    "good-storage": "^1.0.1",
     "hui": "http://localhost/5ds/hui/hui-1.0.0.tgz",
     "jquery": "^3.3.1",
     "vue": "^2.5.2",
+    "vue-lazyload": "^1.2.6",
     "vue-router": "^3.0.1"
   },
   "devDependencies": {

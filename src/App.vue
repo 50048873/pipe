@@ -1,11 +1,16 @@
 <template>
   <div id="app">
+    <iframe v-if="baseUrl === '/api'" src="http://www.whdse.cn:56015/cas-server/login?service=http://www.whdse.cn:56015/znb/index.html" frameborder="0"></iframe>
     <hui-routerview-slide></hui-routerview-slide>
     <hui-nav3 :data="nav3Data"></hui-nav3>
   </div>
 </template>
 
 <script>
+import * as api from '@/assets/js/api'
+import {success} from '@/assets/js/config'
+import {getServerErrorMessageAsHtml} from 'hui/lib/util.js'
+import {setItem} from '@/assets/js/session'
 let nav3Data = [
   {
     title: '首页',
@@ -33,6 +38,46 @@ export default {
     return {
       nav3Data: nav3Data
     }
+  },
+  methods: {
+    getFilePathUrl () {
+      api.getFilePathUrl()
+        .then((res) => {
+          if (typeof res === 'string') {
+            res = JSON.parse(res)
+          }
+          if (res.status === success) {
+            if (res.data && res.data.filePathUrl) {
+              setItem('filePathUrl', res.data.filePathUrl)
+            }
+          } else {
+            this.$message({
+              content: res.msg
+            })
+          }
+        }, (err) => {
+          this.$message({
+            content: getServerErrorMessageAsHtml(err, 'App.vue -> getFilePathUrl'),
+            icon: 'hui-icon-warn'
+          })
+        })
+    }
+  },
+  created () {
+    this.baseUrl = process.env.API_HOST
+    this.getFilePathUrl()
   }
 }
 </script>
+
+<style scoped lang="less">
+  iframe {
+    display: none;
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    z-index: 10;
+    border: 1px solid;
+    box-sizing: border-box;
+  }
+</style>

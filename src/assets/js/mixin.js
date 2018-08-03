@@ -1,5 +1,9 @@
 import {path} from './config'
-import {addAndroidInputBugFixEvent, removeAndroidInputBugFixEvent} from 'hui/lib/util.js'
+import {
+  addAndroidInputBugFixEvent,
+  removeAndroidInputBugFixEvent,
+  isString
+} from 'hui/lib/util.js'
 
 export let getStaticPath = {
   methods: {
@@ -17,5 +21,16 @@ export let androidInputBugFixEvent = {
   },
   beforeDestroy () {
     removeAndroidInputBugFixEvent()
+  }
+}
+
+export let replaceSomeCharacter = {
+  methods: {
+    replaceSomeCharacter (url, searchCharacter, replaceCharacter) {
+      if (isString(url) && url.indexOf(searchCharacter) > -1) {
+        return url.replace(searchCharacter, replaceCharacter)
+      }
+      return url
+    }
   }
 }

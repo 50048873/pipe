@@ -1,11 +1,8 @@
 // 成功
 export const success = 1
 
-// 真实接口
-export const baseUrl = 'http://www.whdse.cn:56015'
-
-// 跨域开发接口（还未配置）
-// export const baseUrl = process.env.API_HOST
+// 跨域开发接口
+export const baseUrl = process.env.API_HOST
 
 // 路径
 export const path = ''

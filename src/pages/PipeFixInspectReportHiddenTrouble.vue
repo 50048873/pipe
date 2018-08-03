@@ -144,7 +144,7 @@ export default {
             })
           }
         }, (err) => {
-          this.$message({content: getServerErrorMessageAsHtml(err, 'ReservoirDetailInspectionAdd.vue->submit'), icon: 'hui-warn'})
+          this.$message({content: getServerErrorMessageAsHtml(err, 'ReservoirDetailInspectionAdd.vue->submit'), icon: 'hui-icon-warn'})
         }).always(() => {
           this.disabled = false
         })

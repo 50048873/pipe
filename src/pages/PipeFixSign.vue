@@ -1,7 +1,7 @@
 <template>
   <div class="page pipeFixSign">
-    <section class="startSignWrap">
-      <ul class="line-bottom">
+    <section class="startSignWrap" v-if="currentIndex === 0">
+      <ul class="line-bottom signInfo">
         <li>
           <div class="title">
             <i class="hui-icon-bell"></i>
@@ -39,18 +39,137 @@
         <a class="btn color-theme">签到</a>
       </div>
     </section>
-    <section class="signedWrap"></section>
-    <div class="tabsWrap">
-      <tabs></tabs>
-    </div>
+    <list3 :data="signedData" v-if="currentIndex === 1"></list3>
+    <tabs @tabChange="tabChange"></tabs>
   </div>
 </template>
 
 <script>
 import Tabs from '@/components/Tabs'
+import List3 from '@/components/List3'
+let signedData = [
+  {
+    datetime: '06-20 10:30',
+    title: '固原市',
+    des: '固原市北京路',
+    photos: [
+      {
+        thumb: 'http://localhost:80/5ds/pipe/static/img/example-1.jpg',
+        url: 'http://localhost:80/5ds/pipe/static/img/example-1.jpg'
+      },
+      {
+        thumb: 'http://localhost:80/5ds/pipe/static/img/example-1.jpg',
+        url: 'http://localhost:80/5ds/pipe/static/img/example-1.jpg'
+      },
+      {
+        thumb: 'http://localhost:80/5ds/pipe/static/img/example-1.jpg',
+        url: 'http://localhost:80/5ds/pipe/static/img/example-1.jpg'
+      },
+      {
+        thumb: 'http://localhost:80/5ds/pipe/static/img/example-1.jpg',
+        url: 'http://localhost:80/5ds/pipe/static/img/example-1.jpg'
+      },
+      {
+        thumb: 'http://localhost:80/5ds/pipe/static/img/example-1.jpg',
+        url: 'http://localhost:80/5ds/pipe/static/img/example-1.jpg'
+      },
+      {
+        thumb: 'http://localhost:80/5ds/pipe/static/img/example-1.jpg',
+        url: 'http://localhost:80/5ds/pipe/static/img/example-1.jpg'
+      }
+    ]
+  },
+  {
+    datetime: '06-20 10:30',
+    title: '固原市',
+    des: '固原市北京路',
+    photos: [
+      {
+        thumb: 'http://localhost:80/5ds/pipe/static/img/example-1.jpg',
+        url: 'http://localhost:80/5ds/pipe/static/img/example-1.jpg'
+      },
+      {
+        thumb: 'http://localhost:80/5ds/pipe/static/img/example-1.jpg',
+        url: 'http://localhost:80/5ds/pipe/static/img/example-1.jpg'
+      }
+    ]
+  },
+  {
+    datetime: '06-20 10:30',
+    title: '固原市',
+    des: '固原市北京路',
+    photos: [
+      {
+        thumb: 'http://localhost:80/5ds/pipe/static/img/example-1.jpg',
+        url: 'http://localhost:80/5ds/pipe/static/img/example-1.jpg'
+      },
+      {
+        thumb: 'http://localhost:80/5ds/pipe/static/img/example-1.jpg',
+        url: 'http://localhost:80/5ds/pipe/static/img/example-1.jpg'
+      }
+    ]
+  },
+  {
+    datetime: '06-20 10:30',
+    title: '固原市',
+    des: '固原市北京路',
+    photos: [
+      {
+        thumb: 'http://localhost:80/5ds/pipe/static/img/example-1.jpg',
+        url: 'http://localhost:80/5ds/pipe/static/img/example-1.jpg'
+      },
+      {
+        thumb: 'http://localhost:80/5ds/pipe/static/img/example-1.jpg',
+        url: 'http://localhost:80/5ds/pipe/static/img/example-1.jpg'
+      }
+    ]
+  },
+  {
+    datetime: '06-20 10:30',
+    title: '固原市',
+    des: '固原市北京路',
+    photos: [
+      {
+        thumb: 'http://localhost:80/5ds/pipe/static/img/example-1.jpg',
+        url: 'http://localhost:80/5ds/pipe/static/img/example-1.jpg'
+      },
+      {
+        thumb: 'http://localhost:80/5ds/pipe/static/img/example-1.jpg',
+        url: 'http://localhost:80/5ds/pipe/static/img/example-1.jpg'
+      }
+    ]
+  },
+  {
+    datetime: '06-20 10:30',
+    title: '固原市',
+    des: '固原市北京路',
+    photos: [
+      {
+        thumb: 'http://localhost:80/5ds/pipe/static/img/example-1.jpg',
+        url: 'http://localhost:80/5ds/pipe/static/img/example-1.jpg'
+      },
+      {
+        thumb: 'http://localhost:80/5ds/pipe/static/img/example-1.jpg',
+        url: 'http://localhost:80/5ds/pipe/static/img/example-1.jpg'
+      }
+    ]
+  }
+]
 export default {
   components: {
-    Tabs
+    Tabs,
+    List3
+  },
+  data () {
+    return {
+      currentIndex: 0,
+      signedData: signedData
+    }
+  },
+  methods: {
+    tabChange (index) {
+      this.currentIndex = index
+    }
   }
 }
 </script>
@@ -58,13 +177,14 @@ export default {
 <style scoped lang="less">
   @import '../assets/less/variable.less';
   .pipeFixSign {
-    ul {
+    padding-bottom: 40px;
+    .signInfo {
       margin-bottom: @margin-small;
       background-color: white;
-      padding: 10px;
+      padding: @margin-medium;
       li {
         display: flex;
-        margin-top: 5px;
+        margin-top: @margin-small;
         .title {
           width: 7em;
           color: @color-text-light;
@@ -94,10 +214,10 @@ export default {
       background-color: white;
     }
     .signPhotoWrap {
-      margin: 10px;
+      margin: @margin-medium;
     }
     .signBtnWrap {
-      margin: 10px;
+      margin: @margin-medium;
     }
   }
 </style>
