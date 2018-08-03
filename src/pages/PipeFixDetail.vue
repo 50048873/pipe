@@ -1,11 +1,13 @@
 <template>
-  <div class="page pipeFix">
-    巡检详情
-  </div>
+  <problem-list></problem-list>
 </template>
 
 <script>
+import ProblemList from '@/components/ProblemList'
 export default {
+  components: {
+    ProblemList
+  }
 }
 </script>
 
