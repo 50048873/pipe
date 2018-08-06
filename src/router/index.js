@@ -12,14 +12,14 @@ import PipeFixInspectReportConstructingProject from '@/pages/PipeFixInspectRepor
 import PipeFixInspectReportRoadImprove from '@/pages/PipeFixInspectReportRoadImprove'                           // 首页 -> 巡检抢修 -> 巡检上报 -> 道路改造
 import PipeFixInspectReportOther from '@/pages/PipeFixInspectReportOther'                                       // 首页 -> 巡检抢修 -> 巡检上报 -> 其他
 import PipeFixSign from '@/pages/PipeFixSign'                                                                   // 首页 -> 巡检抢修 -> 巡检签到
-import PipeFixDetail from '@/pages/PipeFixDetail'                                                               // 首页 -> 巡检抢修 -> 巡检详情
 import PipeAnalyze from '@/pages/PipeAnalyze'                                                                   // 首页 -> 统计分析
 
-import Warn from '@/pages/Warn'                                                                                 // 预警
-import WarnDetail from '@/pages/WarnDetail'                                                                     // 预警详情
 import Message from '@/pages/Message'                                                                           // 消息
 import MessageDetail from '@/pages/MessageDetail'                                                               // 消息详情
 import PersonalCenter from '@/pages/PersonalCenter'                                                             // 个人中心
+
+import ProblemList from '@/components/ProblemList'                                                              // 预警列表（首页 -> 巡检抢修 -> 巡检列表）
+import ProblemDetail from '@/components/ProblemDetail'                                                          // 预警详情（首页 -> 巡检抢修 -> 巡检详情）
 
 Vue.use(Router)
 
@@ -123,9 +123,18 @@ let routes = new Router({
       }
     },
     {
-      path: '/pipeFix/pipeFixDetail',
+      path: '/pipeFix/pipeFixList',
+      name: 'PipeFixList',
+      component: ProblemList,
+      meta: {
+        title: '巡检工作'
+      }
+    },
+    {
+      path: '/pipeFix/pipeFixList/:id',
       name: 'PipeFixDetail',
-      component: PipeFixDetail,
+      component: ProblemDetail,
+      props: true,
       meta: {
         title: '巡检签到'
       }
@@ -141,7 +150,7 @@ let routes = new Router({
     {
       path: '/warn',
       name: 'Warn',
-      component: Warn,
+      component: ProblemList,
       meta: {
         title: '预警消息'
       }
@@ -149,7 +158,7 @@ let routes = new Router({
     {
       path: '/warn/:id',
       name: 'WarnDetail',
-      component: WarnDetail,
+      component: ProblemDetail,
       props: true,
       meta: {
         title: '上报详情'

@@ -43,7 +43,7 @@
             <td></td>
             <td></td>
             <td></td>
-            <td class="detailBtnWrap"><router-link class="btn btn-mini color-theme" to="/pipeFix/pipeFixDetail">详情</router-link></td>
+            <td class="detailBtnWrap"><router-link class="btn btn-mini color-theme" to="/pipeFix/pipeFixList">详情</router-link></td>
           </tr>
         </tbody>
       </table>

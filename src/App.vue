@@ -2,7 +2,7 @@
   <div id="app">
     <iframe v-if="baseUrl === '/api'" src="http://www.whdse.cn:56015/cas-server/login?service=http://www.whdse.cn:56015/znb/index.html" frameborder="0"></iframe>
     <hui-routerview-slide></hui-routerview-slide>
-    <hui-nav3 :data="nav3Data"></hui-nav3>
+    <hui-nav3 :data="nav3Data" v-show="isVisible"></hui-nav3>
   </div>
 </template>
 
@@ -36,7 +36,8 @@ let nav3Data = [
 export default {
   data () {
     return {
-      nav3Data: nav3Data
+      nav3Data: nav3Data,
+      isVisible: true
     }
   },
   methods: {
@@ -64,8 +65,28 @@ export default {
     }
   },
   created () {
-    this.baseUrl = process.env.API_HOST
     this.getFilePathUrl()
+    this.baseUrl = process.env.API_HOST
+  },
+  watch: {
+    '$route' (to, from) {
+      switch (to.name) {
+        case 'Home':
+          this.isVisible = true
+          break
+        case 'Warn':
+          this.isVisible = true
+          break
+        case 'Message':
+          this.isVisible = true
+          break
+        case 'PersonalCenter':
+          this.isVisible = true
+          break
+        default:
+          this.isVisible = false
+      }
+    }
   }
 }
 </script>
