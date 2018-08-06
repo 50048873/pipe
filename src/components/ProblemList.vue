@@ -1,7 +1,7 @@
 <template>
   <div class="page page-hasFooter message">
     <div class="searchWrap">
-      <search></search>
+      <hui-search backgroundColor="#dcdcdc"></hui-search>
     </div>
     <div class="dateWrap">
       <span>{{date}}</span>
@@ -36,7 +36,6 @@
 </template>
 
 <script>
-import Search from '@/components/Search'
 import {getDateStr} from 'hui/lib/util'
 let data = [
   {
@@ -48,9 +47,6 @@ let data = [
   }
 ]
 export default {
-  components: {
-    Search
-  },
   data () {
     return {
       date: getDateStr(),

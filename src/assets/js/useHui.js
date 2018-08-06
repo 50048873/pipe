@@ -8,4 +8,5 @@ export default () => {
   Vue.use(Hui.Message)
   Vue.use(Hui.Uploader)
   Vue.use(Hui.FloatBall)
+  Vue.use(Hui.Search)
 }

@@ -4,6 +4,13 @@
     <div class="viewBtnWrap">
       <input class="esri-component esri-widget-button esri-widget esri-interactive" type="button" id="toggleViewBtn" value="3D" />
     </div>
+    <div class="searchWrap">
+      <hui-search
+        :center.sync="isCenter"
+        @search-change="searchChange"
+      >
+      </hui-search>
+    </div>
     <div class="otherBtnWrap">
       <hui-float-ball
         class="addHiddenTroubleRecordBtn"
@@ -55,7 +62,15 @@
 import * as esriLoader from 'esri-loader'
 import {options} from '@/assets/js/config'
 export default {
+  data () {
+    return {
+      isCenter: true
+    }
+  },
   methods: {
+    searchChange (newVal) {
+      console.log(newVal)
+    },
     toHiddenTrouble () {
       this.$router.push({path: '/pipeFix/pipeFixInspectReport'})
     },
@@ -112,7 +127,8 @@ export default {
             container: 'viewDiv',
             map: map,
             zoom: 15,
-            center: [106.2789984, 35.9969383]
+            center: [106.2789984, 35.9969383],
+            logo: false
           }
 
           return type === '2d' ? new MapView(params) : new SceneView(params)
@@ -132,6 +148,7 @@ export default {
             }
           }
           view.ui.add(toggleViewBtn, 'top-left')
+          view.ui._removeComponents(['attribution'])
         }
 
         toggleView()
@@ -171,6 +188,12 @@ export default {
       width: 36px;
       height: 36px;
       background-color: rgba(255, 255, 255, 0.6);
+    }
+    .searchWrap {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      left: 57px;
     }
     .tableWrap {
       position: fixed;
