@@ -8,6 +8,7 @@
 <script>
 
 export default {
+  name: 'HuiSearch',
   props: {
     placeholder: {
       type: String,
@@ -60,6 +61,7 @@ export default {
     box-sizing: border-box;
     padding-right: 15px;
     padding-left: 15px;
+    border: 1px solid @color-border-default;
     .extend-click {
       &:active {
         transition: transform 0.2s;

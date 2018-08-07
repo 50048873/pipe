@@ -13,8 +13,8 @@ Vue.use(VueLazyloader, {
   attempt: 1
 })
 
-// import VConsole from 'vconsole'
-// new VConsole()
+import VConsole from 'vconsole'
+new VConsole()
 
 import '@/assets/less/common.less'
 
