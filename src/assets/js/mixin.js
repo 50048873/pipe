@@ -4,6 +4,7 @@ import {
   removeAndroidInputBugFixEvent,
   isString
 } from 'hui/lib/util.js'
+import moment from 'moment'
 
 export let getStaticPath = {
   methods: {
@@ -31,6 +32,33 @@ export let replaceSomeCharacter = {
         return url.replace(searchCharacter, replaceCharacter)
       }
       return url
+    }
+  }
+}
+
+export let toKilometre = {
+  filters: {
+    toKilometre (value) {
+      if (value || value === 0) {
+        return (value / 1000).toFixed(2)
+      }
+    }
+  }
+}
+
+export let dateFormat = {
+  filters: {
+    dateFormat (value, format) {
+      if (value) {
+        return moment().format(format)
+      }
+    }
+  },
+  methods: {
+    dateFormat (value, format) {
+      if (value) {
+        return moment().format(format)
+      }
     }
   }
 }

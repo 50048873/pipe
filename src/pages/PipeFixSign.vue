@@ -30,7 +30,7 @@
         </li>
       </ul>
       <div class="signMapWrap line-top line-bottom">
-        <div id="viewDiv"></div>
+        <div id="view_pipeFixSign"></div>
       </div>
       <div class="signPhotoWrap">
         <hui-uploader title="签到照片"></hui-uploader>
@@ -208,7 +208,7 @@ export default {
         }
       }
     }
-    #viewDiv {
+    #view_pipeFixSign {
       width: 100%;
       height: 350px;
       background-color: white;

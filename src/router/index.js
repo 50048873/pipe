@@ -76,9 +76,6 @@ let routes = new Router({
       redirect: '/pipeFix/pipeFixInspectReport/hiddenTrouble',
       name: 'PipeFixInspectReport',
       component: PipeFixInspectReport,
-      meta: {
-        title: '巡检上报'
-      },
       children: [
         {
           path: '/pipeFix/pipeFixInspectReport/hiddenTrouble',

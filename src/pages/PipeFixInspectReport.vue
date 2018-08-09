@@ -1,5 +1,5 @@
 <template>
-  <div class="page pipeFix">
+  <div class="page pipeFixInspectReport">
     <hui-nav3 :data="data2" position="top" height="34px" :isActiveLine="isActiveLine"></hui-nav3>
     <router-view></router-view>
   </div>
@@ -36,6 +36,6 @@ export default {
 
 <style scoped lang="less">
   @import '../assets/less/variable.less';
-  .pipeFix {
+  .pipeFixInspectReport {
   }
 </style>

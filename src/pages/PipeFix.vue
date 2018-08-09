@@ -1,6 +1,6 @@
 <template>
   <div class="page pipeFix">
-    <div id="viewDiv"></div>
+    <div id="view_pipeFix"></div>
     <div class="searchWrap">
       <hui-search
         :center.sync="isCenter"
@@ -46,9 +46,9 @@
         </thead>
         <tbody>
           <tr>
-            <td>{{tableData.startTime}}</td>
-            <td>{{tableData.endTime}}</td>
-            <td>{{tableData.distance}}公里</td>
+            <td>{{tableData.startTime | dateFormat('HH:mm')}}</td>
+            <td>{{tableData.endTime | dateFormat('HH:mm')}}</td>
+            <td>{{tableData.distance | toKilometre}}公里</td>
             <td class="detailBtnWrap"><router-link class="btn btn-mini color-theme" to="/pipeFix/pipeFixList">详情</router-link></td>
           </tr>
         </tbody>
@@ -62,7 +62,7 @@
 import * as esriLoader from 'esri-loader'
 import {options} from '@/assets/js/config'
 import {getTiandituMap} from '@/assets/js/util'
-import moment from 'moment'
+import {toKilometre, dateFormat} from '@/assets/js/mixin'
 export default {
   data () {
     return {
@@ -71,10 +71,11 @@ export default {
       tableData: {
         startTime: '',
         endTime: '',
-        distance: ''
+        distance: 0
       }
     }
   },
+  mixins: [toKilometre, dateFormat],
   computed: {
     getInspectBtnTitle () {
       return this.inspecting ? '正在' : '开始'
@@ -85,9 +86,10 @@ export default {
       this.inspecting = !this.inspecting
       this.watchPosition()
       if (this.inspecting) {
-        this.tableData.startTime = moment().format('HH:mm')
+        this.tableData.startTime = new Date()
       } else {
-        this.tableData.endTime = moment().format('HH:mm')
+        navigator.geolocation && navigator.geolocation.clearWatch(this.watchId)
+        this.tableData.endTime = new Date()
       }
     },
     searchChange (newVal) {
@@ -99,97 +101,14 @@ export default {
     toSign () {
       this.$router.push({path: '/pipeFix/pipeFixSign'})
     },
-    initPipe () {
-      esriLoader.loadModules([
-        'esri/config',
-        'esri/Map',
-        'esri/views/MapView',
-        'esri/views/SceneView',
-        'esri/layers/FeatureLayer'
-      ], options).then(([config, Map, MapView, SceneView, FeatureLayer]) => {
-        // config设置
-        config.request.proxyUrl = 'http://10.100.50.197:2282/Java/proxy.jsp'
-        config.request.corsEnabledServers.push('http://10.100.50.71:2282')
-        // config.request.forceProxy = true
-
-        var toggleViewBtn = document.getElementById('toggleViewBtn')
-        var view
-
-        var createView = function (type = '2d') {
-          var map
-
-          if (type === '2d') {
-            map = new Map({
-              basemap: 'satellite'
-            })
-          } else {
-            map = new Map({
-              basemap: 'satellite',
-              ground: 'world-elevation'
-            })
-          }
-
-          // var layer1 = new FeatureLayer({
-          //   url: 'http://10.100.50.71:6080/arcgis/rest/services/0723PointService/MapServer'
-          // })
-
-          // var layer2 = new FeatureLayer({
-          //   url: 'http://10.100.50.71:6080/arcgis/rest/services/point0723Service/MapServer'
-          // })
-
-          // var layer3 = new FeatureLayer({
-          //   url: 'http://10.100.50.71:6080/arcgis/rest/services/0723MapService/MapServer'
-          // })
-
-          // map.add(layer3)
-          // map.add(layer1)
-          // map.add(layer2)
-
-          var params = {
-            container: 'viewDiv',
-            map: map,
-            zoom: 15,
-            center: [106.2789984, 35.9969383],
-            logo: false
-          }
-
-          return type === '2d' ? new MapView(params) : new SceneView(params)
-        }
-
-        var toggleView = function () {
-          if (view === undefined) {
-            view = createView()
-          } else {
-            var is2D = view.type === '2d'
-            if (is2D) {
-              view = createView('3d')
-              toggleViewBtn.value = '2D'
-            } else {
-              view = createView()
-              toggleViewBtn.value = '3D'
-            }
-          }
-          view.ui.add(toggleViewBtn, 'top-left')
-          view.ui._removeComponents(['attribution'])
-        }
-
-        toggleView()
-
-        toggleViewBtn.addEventListener('click', function () {
-          toggleView()
-        })
-      })
-    },
     initPipeFixMap () {
       esriLoader.loadModules([
         'esri/config',
         'esri/Map',
         'esri/views/MapView',
         'esri/layers/WebTileLayer',
-        'esri/layers/support/TileInfo',
-        "esri/Graphic",
-        "esri/geometry/geometryEngine",
-      ], options).then(([config, Map, MapView, WebTileLayer, TileInfo, Graphic, geometryEngine]) => {
+        'esri/layers/support/TileInfo'
+      ], options).then(([config, Map, MapView, WebTileLayer, TileInfo]) => {
         // config设置
         config.request.proxyUrl = 'http://10.100.50.197:2282/Java/proxy.jsp'
         config.request.corsEnabledServers.push('http://10.100.50.71:2282')
@@ -199,7 +118,7 @@ export default {
 
         // 创建MapView
         var view = new MapView({
-          container: 'viewDiv',
+          container: 'view_pipeFix',
           spatialReference: {
             wkid: 4326
           },
@@ -221,73 +140,22 @@ export default {
           }
         })
 
+        view.ui._removeComponents(['attribution'])
+
         this.map = map
         this.view = view
 
         // 标记签到点
         this.markMultiSignPoint(view, this.signPoint)
 
+        // 注册点击事件
         this.registerPopup(view)
-
-        /*var success = (position) => {
-          console.log('success', position)
-          let longitude = position.coords.longitude
-          let latitude = position.coords.latitude
-
-          // First create a line geometry (this is the Keystone pipeline)
-          this.polyline.paths.push([longitude, latitude])
-
-          // Create a symbol for drawing the line
-          var lineSymbol = {
-            type: "simple-line",  // autocasts as SimpleLineSymbol()
-            color: [255, 0, 0],
-            width: 4
-          };
-
-          // Create an object for storing attributes related to the line
-          var lineAtt = {
-            Name: "Keystone Pipeline",
-            Owner: "TransCanada",
-            Length: "3,456 km"
-          };
-
-          ******************************************
-           * Create a new graphic and add the geometry,
-           * symbol, and attributes to it. You may also
-           * add a simple PopupTemplate to the graphic.
-           * This allows users to view the graphic's
-           * attributes when it is clicked.
-           *****************************************
-          var polylineGraphic = new Graphic({
-            geometry: this.polyline,
-            symbol: lineSymbol,
-            attributes: lineAtt
-          });
-
-          // Add the line graphic to the view's GraphicsLayer
-          view.graphics.add(polylineGraphic);
-        }
-
-        var error = (error) => {
-          console.log('error', error)
-        }
-
-        if (navigator.geolocation) {
-          navigator.geolocation.watchPosition(this.success, this.error, {
-            // 指示浏览器获取高精度的位置，默认为false
-            enableHighAcuracy: true,
-            // 指定获取地理位置的超时时间，默认不限时，单位为毫秒
-            timeout: 15000,
-            // 最长有效期，在重复获取地理位置时，此参数指定多久再次获取位置。
-            maximumAge: 0
-          })
-        }*/
       })
     },
     watchPosition () {
       return new Promise((resolve, reject) => {
         if (navigator.geolocation) {
-          navigator.geolocation.watchPosition((position) => {
+          this.watchId = navigator.geolocation.watchPosition((position) => {
             this.success(position)
             resolve(position)
           }, (err) => {
@@ -312,8 +180,9 @@ export default {
         var line = new Polyline();
         line.addPath([point1, point2]);
         var distance = 0
-        if (this.map.spatialReference.wkid == "4326"||this.map.spatialReference.isWebMercator()) {//在web麦卡托投影和WGS84坐标系下的计算方法
+        if (this.map.spatialReference.wkid == "4326" || this.map.spatialReference.isWebMercator()) {//在web麦卡托投影和WGS84坐标系下的计算方法
           distance = geometryEngine.geodesicLength(line, "meters")
+          console.log(typeof this.tableData.distance, typeof distance)
           this.tableData.distance += distance
         } else {//在其他投影坐标系下的计算方法
           distance = geometryEngine.planarLength(line, "meters")
@@ -355,7 +224,13 @@ export default {
           attributes: lineAtt
         });
 
-        this._calDistance([114.360694, 30.584929], [114.360809, 30.585959], "meters")
+        var paths = this.polyline.paths
+        var len = paths.length
+        if (len > 1) {
+          var startPoint = paths[len - 2]
+          var endPoint = paths[len - 1]
+          this._calDistance(startPoint, endPoint, "meters")
+        }
 
         // Add the line graphic to the view's GraphicsLayer
         this.view.graphics.add(polylineGraphic);
@@ -420,11 +295,13 @@ export default {
     },
     initSingleDirectionParam () {
       this.view = null
+      this.map = null
+      this.watchId = null
       this.polyline = {
         type: "polyline",  // autocasts as new Polyline()
         paths: [
-          [114.360694, 30.584929],
-          [114.360809, 30.585959]
+          // [114.360694, 30.584929],
+          // [114.360809, 30.585959]
         ]
       };
 
@@ -460,7 +337,7 @@ export default {
 <style scoped lang="less">
   @import '../assets/less/variable.less';
   .pipeFix {
-    #viewDiv {
+    #view_pipeFix {
       padding: 0;
       margin: 0;
       height: 100%;
