@@ -11,6 +11,15 @@ export const path = ''
 export const options = {
   // url: '/static/arcgis_js_api/library/4.8/dojo/dojo.js',
   // css: '/static/arcgis_js_api/library/4.8/esri/css/main.css'
+
+  // url: 'http://localhost/arcgis/arcgis_js_v48_api/arcgis_js_api/library/4.8/dojo/dojo.js',
+  // css: 'http://localhost/arcgis/arcgis_js_v48_api/arcgis_js_api/library/4.8/esri/css/main.css'
+
+  // 开发环境
   url: 'http://10.100.50.71:2282/arcgis_js_api/library/4.7/init.js',
   css: 'http://10.100.50.71:2282/arcgis_js_api/library/4.7/esri/css/main.css'
+
+  // 正式环境
+  // url: 'http://sw.nxstjt.com/arcgis_js_api/library/4.7/init.js',
+  // css: 'http://sw.nxstjt.com/arcgis_js_api/library/4.7/esri/css/main.css'
 }

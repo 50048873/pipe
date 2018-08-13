@@ -36,7 +36,7 @@
 </template>
 
 <script>
-import {getDateStr} from 'hui/lib/util'
+import moment from 'moment'
 let data = [
   {
     id: 0,
@@ -49,7 +49,7 @@ let data = [
 export default {
   data () {
     return {
-      date: getDateStr(),
+      date: moment().format('YYYY-MM-DD'),
       data: data
     }
   },

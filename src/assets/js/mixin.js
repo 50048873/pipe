@@ -50,14 +50,14 @@ export let dateFormat = {
   filters: {
     dateFormat (value, format) {
       if (value) {
-        return moment().format(format)
+        return moment(value).format(format)
       }
     }
   },
   methods: {
     dateFormat (value, format) {
       if (value) {
-        return moment().format(format)
+        return moment(value).format(format)
       }
     }
   }
