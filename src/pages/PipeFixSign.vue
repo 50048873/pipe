@@ -8,7 +8,7 @@
             <span>签到时间：</span>
           </div>
           <div class="content">
-            <time>2018-05-16 10:30</time>
+            <time>{{signInfo.time}}</time>
           </div>
         </li>
         <li>
@@ -16,7 +16,7 @@
             <i class="hui-icon-bell"></i>
             <span>签到点：</span>
           </div>
-          <div class="content">固原市</div>
+          <div class="content">{{signInfo.address}}</div>
         </li>
         <li>
           <div class="title">
@@ -25,7 +25,7 @@
           </div>
           <div class="content">
             <span>固原市</span>
-            <em>（距离最近签到点100米）</em>
+            <em v-show="signInfo.distance">（距离最近签到点{{signInfo.distance | handleDecimalLength(0)}}米）</em>
           </div>
         </li>
       </ul>
@@ -52,6 +52,8 @@ import * as esriLoader from 'esri-loader'
 import {options} from '@/assets/js/config'
 import {getTiandituMap} from '@/assets/js/util'
 import {mapGetters} from 'vuex'
+import moment from 'moment'
+import {calDistance, _handleDecimalLength} from '@/assets/js/mixin'
 let signedData = [
   {
     datetime: '06-20 10:30',
@@ -168,9 +170,16 @@ export default {
   data () {
     return {
       currentIndex: 0,
-      signedData: signedData
+      signedData: signedData,
+      signInfo: {
+        time: moment().format('YYYY-MM-DD'),
+        address: '',
+        currentAddress: '',
+        distance: null
+      }
     }
   },
+  mixins: [calDistance, _handleDecimalLength],
   computed: {
     ...mapGetters(['signPoint'])
   },
@@ -220,8 +229,8 @@ export default {
         view.graphics.add(pointGraphic);
       })
     },
-    handleNoInspect (position) {
-      // console.log('handleNoInspect', position)
+    async handlePosition (position) {
+      console.log('handlePosition', position)
       let longitude = position.coords.longitude
       let latitude = position.coords.latitude
 
@@ -235,11 +244,39 @@ export default {
 
       this.markSingleInspector(this.view, {longitude, latitude, id: this.currentInspectorId})
       this.view.goTo([longitude, latitude])
+
+      let nearestSignPointInfo = await this.getNearestSignPointInfo(longitude, latitude)
+      console.log(nearestSignPointInfo)
+      this.signInfo.distance = nearestSignPointInfo.nearestDistance
+      this.signInfo.address = nearestSignPointInfo.signAddress
     },
-    watchPositionNoInspect () {
+    async getNearestSignPointInfo (longitude, latitude) {
+      let arr = []
+      let nearestDistance
+      let index
+      let signPointInfo
+
+      for (let item of this.signPoint) {
+        let distance = await this.calDistance([longitude, latitude], [item.longitude, item.latitude])
+        arr.push(distance)
+      }
+
+      // 获取巡检人到最近签到点的距离
+      nearestDistance = Math.min.apply(Math, arr)
+
+      // 获取巡检人到最近签到点对象
+      index = arr.findIndex((item) => {
+        return item === nearestDistance
+      })
+      signPointInfo = this.signPoint[index]
+      signPointInfo.nearestDistance = nearestDistance
+
+      return signPointInfo
+    },
+    watchPosition () {
       if (navigator.geolocation) {
         this.watchId = navigator.geolocation.watchPosition((position) => {
-          this.handleNoInspect(position)
+          this.handlePosition(position)
         }, (err) => {
           this.error(err)
         }, {
@@ -252,23 +289,13 @@ export default {
         })
       }
     },
-    initPipeFixMap () {
+    async initPipeFixMap () {
+      // 加载天地图
+      var map = await getTiandituMap()
+
       esriLoader.loadModules([
-        'esri/config',
-        'esri/Map',
-        'esri/views/MapView',
-        'esri/layers/WebTileLayer',
-        'esri/layers/TileLayer',
-        'esri/layers/support/TileInfo',
-        'esri/layers/FeatureLayer'
-      ], options).then(([config, Map, MapView, WebTileLayer, TileLayer, TileInfo, FeatureLayer]) => {
-        // config设置
-        config.request.proxyUrl = 'http://10.100.50.197:2282/Java/proxy.jsp'
-        config.request.corsEnabledServers.push('http://10.100.50.71:2282', 'sw.nxstjt.com')
-
-        /* 加载天地图 */
-        var map = getTiandituMap(Map, TileInfo, WebTileLayer, FeatureLayer)
-
+        'esri/views/MapView'
+      ], options).then(async ([MapView]) => {
         // 创建MapView
         var view = new MapView({
           container: 'view_pipeFixSign',
@@ -303,7 +330,7 @@ export default {
         this.markMultiSignPoint(view, this.signPoint)
 
         // 标记自己的位置
-        this.watchPositionNoInspect()
+        this.watchPosition()
       })
     },
     markSingleSignPoint (view, longitude, latitude) {
@@ -360,7 +387,6 @@ export default {
   },
   mounted () {
     this.initPipeFixMap()
-    console.log(this.signPoint)
   }
 }
 </script>

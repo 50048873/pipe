@@ -65,7 +65,8 @@ import {getTiandituMap} from '@/assets/js/util'
 import {toKilometre, dateFormat} from '@/assets/js/mixin'
 import {saveInspectedPath} from '@/assets/js/store'
 import * as api from '@/assets/js/api'
-import {mapMutations} from 'vuex'
+import {mapGetters, mapMutations} from 'vuex'
+import {calDistance} from '@/assets/js/mixin'
 export default {
   data () {
     return {
@@ -78,8 +79,9 @@ export default {
       }
     }
   },
-  mixins: [toKilometre, dateFormat],
+  mixins: [toKilometre, dateFormat, calDistance],
   computed: {
+    ...mapGetters(['currentInspectorId']),
     getInspectBtnTitle () {
       return this.inspecting ? '正在' : '开始'
     }
@@ -111,23 +113,13 @@ export default {
     toSign () {
       this.$router.push({path: '/pipeFix/pipeFixSign'})
     },
-    initPipeFixMap () {
+    async initPipeFixMap () {
+      // 加载天地图
+      var map = await getTiandituMap()
+
       esriLoader.loadModules([
-        'esri/config',
-        'esri/Map',
-        'esri/views/MapView',
-        'esri/layers/WebTileLayer',
-        'esri/layers/TileLayer',
-        'esri/layers/support/TileInfo',
-        'esri/layers/FeatureLayer'
-      ], options).then(async ([config, Map, MapView, WebTileLayer, TileLayer, TileInfo, FeatureLayer]) => {
-        // config设置
-        config.request.proxyUrl = 'http://10.100.50.197:2282/Java/proxy.jsp'
-        config.request.corsEnabledServers.push('http://10.100.50.71:2282', 'sw.nxstjt.com')
-
-        /* 加载天地图 */
-        var map = getTiandituMap(Map, TileInfo, WebTileLayer, FeatureLayer)
-
+        'esri/views/MapView'
+      ], options).then(async ([MapView]) => {
         // 创建MapView
         var view = new MapView({
           container: 'view_pipeFix',
@@ -242,24 +234,6 @@ export default {
         })
       }
     },
-    _calDistance (point1, point2) { //计算距离
-      return esriLoader.loadModules([
-        "esri/geometry/geometryEngine",
-        "esri/geometry/Polyline"
-      ], options).then(([geometryEngine, Polyline]) => {
-        var line = new Polyline();
-        line.addPath([point1, point2]);
-        var distance = 0
-        if (this.map.spatialReference.wkid == "4326" || this.map.spatialReference.isWebMercator()) {//在web麦卡托投影和WGS84坐标系下的计算方法
-          distance = geometryEngine.geodesicLength(line, "meters")
-          this.tableData.distance += distance
-        } else {//在其他投影坐标系下的计算方法
-          distance = geometryEngine.planarLength(line, "meters")
-          this.tableData.distance += distance
-        }
-        return distance
-      })
-    },
     handleInspecting (position) {
       esriLoader.loadModules([
         "esri/Graphic",
@@ -273,7 +247,6 @@ export default {
         let time = position.timestamp
 
         this.inspectedPath.push([longitude, latitude])
-        console.log('inspectedPath')
         saveInspectedPath({longitude, latitude, accuracy, time})
 
         // First create a line geometry (this is the Keystone pipeline)
@@ -311,7 +284,10 @@ export default {
         if (len > 1) {
           var startPoint = paths[len - 2]
           var endPoint = paths[len - 1]
-          this._calDistance(startPoint, endPoint, "meters")
+          this.calDistance(startPoint, endPoint, "meters")
+            .then((distance) => {
+              this.tableData.distance += distance
+            })
         }
 
         // 标记起始点
@@ -499,7 +475,6 @@ export default {
       this.view = null                  // 视图
       this.map = null                   // 地图
       this.watchId = null               // 定位id
-      this.currentInspectorId = 0       // 当前巡检人
       this.startPointIsMarked = false   // 是否已标记起点
       this.interval = null              // 其他巡检人id
       this.noInspectPath = []           // 自己的非巡检路径

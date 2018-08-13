@@ -2,9 +2,12 @@ import {path} from './config'
 import {
   addAndroidInputBugFixEvent,
   removeAndroidInputBugFixEvent,
-  isString
+  isString,
+  handleDecimalLength
 } from 'hui/lib/util.js'
 import moment from 'moment'
+import * as esriLoader from 'esri-loader'
+import {options} from '@/assets/js/config'
 
 export let getStaticPath = {
   methods: {
@@ -60,5 +63,32 @@ export let dateFormat = {
         return moment(value).format(format)
       }
     }
+  }
+}
+
+export let calDistance = {
+  methods: {
+    calDistance (point1, point2, unit = 'meters') { // 计算距离
+      return esriLoader.loadModules([
+        'esri/geometry/geometryEngine',
+        'esri/geometry/Polyline'
+      ], options).then(([geometryEngine, Polyline]) => {
+        var line = new Polyline()
+        line.addPath([point1, point2])
+        var distance = 0
+        if (this.map.spatialReference.wkid === 4326 || this.map.spatialReference.isWebMercator()) { // 在web麦卡托投影和WGS84坐标系下的计算方法
+          distance = geometryEngine.geodesicLength(line, unit)
+        } else { // 在其他投影坐标系下的计算方法
+          distance = geometryEngine.planarLength(line, unit)
+        }
+        return distance
+      })
+    }
+  }
+}
+
+export let _handleDecimalLength = {
+  filters: {
+    handleDecimalLength
   }
 }
