@@ -63,6 +63,9 @@ import * as esriLoader from 'esri-loader'
 import {options} from '@/assets/js/config'
 import {getTiandituMap} from '@/assets/js/util'
 import {toKilometre, dateFormat} from '@/assets/js/mixin'
+import {saveInspectedPath} from '@/assets/js/store'
+import * as api from '@/assets/js/api'
+import {mapMutations} from 'vuex'
 export default {
   data () {
     return {
@@ -82,15 +85,22 @@ export default {
     }
   },
   methods: {
+    ...mapMutations(['set_signPoint']),
     startInspect () {
       this.inspecting = !this.inspecting
-      this.watchPosition()
+
+      // 清除之前的定位并开始巡检中的定位
+      this.watchId && this.clearWatch(this.watchId)
+      this.watchPositionInspecting()
+
       if (this.inspecting) {
         this.tableData.startTime = new Date()
       } else {
-        navigator.geolocation && navigator.geolocation.clearWatch(this.watchId)
         this.tableData.endTime = new Date()
       }
+    },
+    clearWatch (watchId) {
+      navigator.geolocation && navigator.geolocation.clearWatch(watchId)
     },
     searchChange (newVal) {
       console.log(newVal)
@@ -111,7 +121,7 @@ export default {
         'esri/layers/TileLayer',
         'esri/layers/support/TileInfo',
         'esri/layers/FeatureLayer'
-      ], options).then(([config, Map, Basemap, MapView, WebTileLayer, TileLayer, TileInfo, FeatureLayer]) => {
+      ], options).then(async ([config, Map, Basemap, MapView, WebTileLayer, TileLayer, TileInfo, FeatureLayer]) => {
         // config设置
         config.request.proxyUrl = 'http://10.100.50.197:2282/Java/proxy.jsp'
         config.request.corsEnabledServers.push('http://10.100.50.71:2282', 'sw.nxstjt.com')
@@ -153,93 +163,96 @@ export default {
             }
           }
         })
-        /* 加载天地图 */
 
-        /* 加载ChinaOnlineCommunity切片地图 */
-        // var layer = new TileLayer({
-        //   url: 'http://map.geoq.cn/arcgis/rest/services/ChinaOnlineCommunity/MapServer'
-        // })
-
-        // var layer1 = new FeatureLayer({
-        //   url: 'http://10.100.50.71:6080/arcgis/rest/services/whMapService/MapServer'
-        // })
-
-        // var layer2 = new FeatureLayer({
-        //   url: 'http://10.100.50.71:6080/arcgis/rest/services/whPointService/MapServer'
-        // })
-
-        // var customBasemap = new Basemap({
-        //   baseLayers: [layer, layer2, layer1],
-        //   title: '自定底图',
-        //   id: 'myBasemap'
-        // })
-
-        // var map = new Map({
-        //   spatialReference: {
-        //     wkid: 4326 // 102100
-        //   },
-        //   basemap: customBasemap
-        // })
-
-        // var view = new MapView({
-        //   container: 'view_pipeFix',
-        //   map: map,
-        //   zoom: 17,
-        //   center: [114.36734997908269, 30.58279419154841] // longitude, latitude
-        // })
-        /* 加载ChinaOnlineCommunity切片地图 */
-
+        // 移除esri log
         view.ui._removeComponents(['attribution'])
 
         this.map = map
         this.view = view
 
+        // 获取签到点
+        let signPoint = await api.getSignPoint()
         // 标记签到点
-        this.markMultiSignPoint(view, this.signPoint)
+        this.markMultiSignPoint(view, signPoint)
+        // mutation签到点
+        this.set_signPoint(signPoint)
 
-        // 标记巡检人
-        // this.markMultiInspector(view, this.inspector)
-        console.log(this.view.graphics)
-        // setInterval(() => {
-          this.getInspectorDynamicInfo()
-            .then((res) => {
-              // 重新标记自己的位置
-              this.view.graphics.items.forEach((graphic) => {
-                if (graphic.attributes && graphic.attributes.id !== this.currentInspectorId) {
-                  this.view.graphics.remove(graphic)
-                }
-              })
+        // 标记自己的位置
+        this.watchPositionNoInspect()
 
-              // console.log(this.view.graphics.removeAll())
-
-              // 标记巡检人
-              this.markMultiInspector(view, res)
-            })
-        // }, 3000)
+        // 标记其他人的位置
+        this.handleOtherInspector()
 
         // 注册点击事件
         this.registerPopup(view)
       })
     },
-    watchPosition () {
-      return new Promise((resolve, reject) => {
-        if (navigator.geolocation) {
-          this.watchId = navigator.geolocation.watchPosition((position) => {
-            this.success(position)
-            resolve(position)
-          }, (err) => {
-            this.error(err)
-            reject(err)
-          }, {
-            // 指示浏览器获取高精度的位置，默认为false
-            enableHighAcuracy: true,
-            // 指定获取地理位置的超时时间，默认不限时，单位为毫秒
-            timeout: 15000,
-            // 最长有效期，在重复获取地理位置时，此参数指定多久再次获取位置。
-            maximumAge: 0
+    async handleOtherInspector () {
+      let firstInfo = await this.getOtherInspectorInfo()
+      // 标记其他巡检人初始位置
+      this.markMultiInspector(this.view, firstInfo)
+
+      this.interval = setInterval(() => {
+        this.getOtherInspectorInfo()
+          .then((res) => {
+            // 清除其他巡检人之前的位置
+            let arr = this.view.graphics.items.filter((graphic) => {
+              return graphic.attributes && graphic.attributes.name && graphic.attributes.id !== this.currentInspectorId
+            })
+            this.view.graphics.removeMany(arr)
+
+            // 标记其他巡检人新的位置
+            this.markMultiInspector(this.view, res)
           })
+      }, 3000)
+    },
+    watchPositionNoInspect () {
+      if (navigator.geolocation) {
+        this.watchId = navigator.geolocation.watchPosition((position) => {
+          this.handleNoInspect(position)
+        }, (err) => {
+          this.error(err)
+        }, {
+          // 指示浏览器获取高精度的位置，默认为false
+          enableHighAcuracy: true,
+          // 指定获取地理位置的超时时间，默认不限时，单位为毫秒
+          timeout: 15000,
+          // 最长有效期，在重复获取地理位置时，此参数指定多久再次获取位置。
+          maximumAge: 0
+        })
+      }
+    },
+    handleNoInspect (position) {
+      // console.log('handleNoInspect', position)
+      let longitude = position.coords.longitude
+      let latitude = position.coords.latitude
+
+      // 移除之前自己的位置
+      let graphic = this.view.graphics.items.find((graphic) => {
+        if (graphic.attributes) {
+          return graphic.attributes.id === this.currentInspectorId
         }
       })
+      this.view.graphics.remove(graphic)
+
+      this.markSingleInspector(this.view, {longitude, latitude, id: this.currentInspectorId})
+      this.view.goTo([longitude, latitude])
+    },
+    watchPositionInspecting () {
+      if (navigator.geolocation) {
+        this.watchId = navigator.geolocation.watchPosition((position) => {
+          this.handleInspecting(position)
+        }, (err) => {
+          this.error(err)
+        }, {
+          // 指示浏览器获取高精度的位置，默认为false
+          enableHighAcuracy: true,
+          // 指定获取地理位置的超时时间，默认不限时，单位为毫秒
+          timeout: 15000,
+          // 最长有效期，在重复获取地理位置时，此参数指定多久再次获取位置。
+          maximumAge: 0
+        })
+      }
     },
     _calDistance (point1, point2) { //计算距离
       return esriLoader.loadModules([
@@ -259,18 +272,27 @@ export default {
         return distance
       })
     },
-    success (position) {
+    handleInspecting (position) {
       esriLoader.loadModules([
         "esri/Graphic",
         "esri/geometry/geometryEngine",
         "esri/geometry/Polyline"
       ], options).then(([Graphic, geometryEngine, Polyline]) => {
-        console.log('success', position)
+        // console.log('handleInspecting', position)
         let longitude = position.coords.longitude
         let latitude = position.coords.latitude
+        let accuracy = position.coords.accuracy
+        let time = position.timestamp
+
+        this.inspectedPath.push([longitude, latitude])
+        console.log('inspectedPath')
+        saveInspectedPath({longitude, latitude, accuracy, time})
 
         // First create a line geometry (this is the Keystone pipeline)
-        this.polyline.paths.push([longitude, latitude])
+        var polyline = {                 // 自己的巡检路径
+          type: "polyline",  // autocasts as new Polyline()
+          paths: this.inspectedPath
+        };
 
         // Create a symbol for drawing the line
         var lineSymbol = {
@@ -287,7 +309,7 @@ export default {
         };
 
         var polylineGraphic = new Graphic({
-          geometry: this.polyline,
+          geometry: polyline,
           symbol: lineSymbol,
           attributes: lineAtt
         });
@@ -296,7 +318,7 @@ export default {
         this.view.graphics.add(polylineGraphic);
 
         // 计算已走线路长度
-        var paths = this.polyline.paths
+        var paths = this.inspectedPath
         var len = paths.length
         if (len > 1) {
           var startPoint = paths[len - 2]
@@ -327,7 +349,7 @@ export default {
     registerPopup (view) {
       view.on("click", function(event) {
         event.stopPropagation();
-        console.log(111, event)
+        console.log('click', event)
 
         // Get the coordinates of the click on the view
         // around the decimals to 3 decimals
@@ -470,94 +492,33 @@ export default {
         this.markSingleInspector(view, coord)
       }
     },
-    async getInspectorDynamicInfo () {
-      let res = await new Promise((resolve, reject) => {
-        this.inspector.forEach((item) => {
-          if (item.id !== this.currentInspectorId) {
-            item.longitude += 0.00002
-            item.latitude += 0.00002
-          }
+    getOtherInspectorInfo () {
+      let getRandomPosition = () => {
+        return Math.random() / 10000
+      }
+      return new Promise((resolve, reject) => {
+        let arr = this.inspector.filter((item) => {
+          return item.id !== this.currentInspectorId
         })
-        resolve(this.inspector)
+        arr.forEach((item) => {
+          item.longitude += getRandomPosition()
+          item.latitude += getRandomPosition()
+        })
+        resolve(arr)
       })
-
-      return res
     },
     initSingleDirectionParam () {
-      this.view = null
-      this.map = null
-      this.watchId = null
-      this.currentInspectorId = 0
-      this.startPointIsMarked = false
-      this.polyline = {
-        type: "polyline",  // autocasts as new Polyline()
-        paths: [
-          // [114.360694, 30.584929],
-          // [114.360809, 30.585959]
-        ]
-      };
-      /* ChinaOnlineCommunity切片地图 */
-      /*this.signPoint = [
-        {
-          longitude: 114.36601423899525,
-          latitude: 30.583052810396683
-        },
-        {
-          longitude: 114.36669015566694,
-          latitude: 30.58253557201158
-        },
-        {
-          longitude: 114.36756992022374,
-          latitude: 30.58320059228558
-        },
-        {
-          longitude: 114.36616444270008,
-          latitude: 30.583542337040814
-        }
-      ]
-      this.inspector = [
-        {
-          id: 0,
-          longitude: 114.3655314413688,
-          latitude: 30.58328833767432,
-          name: '巡检人一',
-          tel: 13800000000
-        },
-        {
-          id: 1,
-          longitude: 114.36542415301174,
-          latitude: 30.58123784570178,
-          name: '巡检人二',
-          tel: 13800000000
-        },
-        {
-          id: 2,
-          longitude: 114.36894321123896,
-          latitude: 30.583981061649666,
-          name: '巡检人三',
-          tel: 13800000000
-        }
-      ]*/
-
-      /* 天地图数据 */
-      this.signPoint = [
-        {
-          longitude: 114.36042987982836,
-          latitude: 30.58512173634147
-        },
-        {
-          longitude: 114.36001585361335,
-          latitude: 30.58453163001203
-        },
-        {
-          longitude: 114.36031090677805,
-          latitude: 30.584307960677474
-        },
-        {
-          longitude: 114.36079155790127,
-          latitude: 30.58477909395663
-        }
-      ]
+      this.view = null                  // 视图
+      this.map = null                   // 地图
+      this.watchId = null               // 定位id
+      this.currentInspectorId = 0       // 当前巡检人
+      this.startPointIsMarked = false   // 是否已标记起点
+      this.interval = null              // 其他巡检人id
+      this.noInspectPath = []           // 自己的非巡检路径
+      this.inspectedPath = [            // 自己的巡检路径
+        // [114.360694, 30.584929],
+        // [114.360809, 30.585959]
+      ];
 
       this.inspector = [
         {
@@ -589,6 +550,10 @@ export default {
   },
   mounted () {
     this.initPipeFixMap()
+  },
+  beforeDestroy () {
+    this.clearWatch(this.watchId)
+    clearInterval(this.interval)
   }
 }
 </script>

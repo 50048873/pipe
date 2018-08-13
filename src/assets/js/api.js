@@ -11,11 +11,17 @@ export function getFilePathUrl () {
   })
 }
 
+// 获取签到点
+export function getSignPoint () {
+  const url = '/static/signPoint.json'
+  return $.ajax({
+    type: 'GET',
+    url: url
+  })
+}
+
 // 巡检 -> 上传
 export function getReservoirDetailInspectionAdd (data) {
-  // data.forEach((item, key) => {
-  //   console.log(key, ': ', item)
-  // })
   return $.ajax({
     type: 'POST',
     contentType: false,

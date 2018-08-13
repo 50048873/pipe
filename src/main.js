@@ -4,6 +4,7 @@
 import Vue from 'vue'
 import App from './App'
 import router from './router'
+import store from './store'
 
 import VueLazyloader from 'vue-lazyload'
 Vue.use(VueLazyloader, {
@@ -13,8 +14,8 @@ Vue.use(VueLazyloader, {
   attempt: 1
 })
 
-import VConsole from 'vconsole'
-new VConsole()
+// import VConsole from 'vconsole'
+// new VConsole()
 
 import '@/assets/less/common.less'
 
@@ -27,5 +28,6 @@ new Vue({
   el: '#app',
   router,
   components: { App },
-  template: '<App/>'
+  template: '<App/>',
+  store
 })
