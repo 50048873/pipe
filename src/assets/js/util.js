@@ -1,4 +1,4 @@
-export function getTiandituMap (TileInfo, WebTileLayer, Map) {
+export function getTiandituMap (Map, TileInfo, WebTileLayer, FeatureLayer) {
   // 首先我们设定瓦片信息，天地图经纬度地图的切片信息全部使用该信息设定
   var tileInfo = new TileInfo({
     dpi: 90.71428571427429,
@@ -46,13 +46,21 @@ export function getTiandituMap (TileInfo, WebTileLayer, Map) {
     tileInfo: tileInfo
   })
 
+  var layer1 = new FeatureLayer({
+    url: 'http://10.100.50.71:6080/arcgis/rest/services/whMapService/MapServer'
+  })
+
+  var layer2 = new FeatureLayer({
+    url: 'http://10.100.50.71:6080/arcgis/rest/services/whPointService/MapServer'
+  })
+
   // 创建地图，不设置底图，如果设置底图会造成坐标系无法被转换成 ESPG:4326 (WGS1984)
   var map = new Map({
     spatialReference: {
       wkid: 4326
     },
     basemap: {
-      baseLayers: [layer, layerAnno]
+      baseLayers: [layer, layerAnno, layer1, layer2]
     }
   })
   return map

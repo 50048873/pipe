@@ -256,30 +256,18 @@ export default {
       esriLoader.loadModules([
         'esri/config',
         'esri/Map',
-        'esri/Basemap',
         'esri/views/MapView',
         'esri/layers/WebTileLayer',
         'esri/layers/TileLayer',
         'esri/layers/support/TileInfo',
         'esri/layers/FeatureLayer'
-      ], options).then(([config, Map, Basemap, MapView, WebTileLayer, TileLayer, TileInfo, FeatureLayer]) => {
+      ], options).then(([config, Map, MapView, WebTileLayer, TileLayer, TileInfo, FeatureLayer]) => {
         // config设置
         config.request.proxyUrl = 'http://10.100.50.197:2282/Java/proxy.jsp'
         config.request.corsEnabledServers.push('http://10.100.50.71:2282', 'sw.nxstjt.com')
 
         /* 加载天地图 */
-        var map = getTiandituMap(TileInfo, WebTileLayer, Map)
-
-        var layer1 = new FeatureLayer({
-          url: 'http://10.100.50.71:6080/arcgis/rest/services/whMapService/MapServer'
-        })
-
-        var layer2 = new FeatureLayer({
-          url: 'http://10.100.50.71:6080/arcgis/rest/services/whPointService/MapServer'
-        })
-
-        map.add(layer1)
-        map.add(layer2)
+        var map = getTiandituMap(Map, TileInfo, WebTileLayer, FeatureLayer)
 
         // 创建MapView
         var view = new MapView({
@@ -365,37 +353,6 @@ export default {
       this.map = null                   // 地图
       this.watchId = null               // 定位id
       this.currentInspectorId = 0       // 当前巡检人
-      this.startPointIsMarked = false   // 是否已标记起点
-      this.interval = null              // 其他巡检人id
-      this.noInspectPath = []           // 自己的非巡检路径
-      this.inspectedPath = [            // 自己的巡检路径
-        // [114.360694, 30.584929],
-        // [114.360809, 30.585959]
-      ];
-
-      this.inspector = [
-        {
-          id: 0,
-          longitude: 114.360287112168,
-          latitude: 30.58497896868112,
-          name: '巡检人一',
-          tel: 13800000000
-        },
-        {
-          id: 1,
-          longitude: 114.36105805753392,
-          latitude: 30.58454114785602,
-          name: '巡检人二',
-          tel: 13800000000
-        },
-        {
-          id: 2,
-          longitude: 114.35998254115928,
-          latitude: 30.583922487994503,
-          name: '巡检人三',
-          tel: 13800000000
-        }
-      ]
     }
   },
   created () {

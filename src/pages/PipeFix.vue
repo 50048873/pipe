@@ -115,30 +115,18 @@ export default {
       esriLoader.loadModules([
         'esri/config',
         'esri/Map',
-        'esri/Basemap',
         'esri/views/MapView',
         'esri/layers/WebTileLayer',
         'esri/layers/TileLayer',
         'esri/layers/support/TileInfo',
         'esri/layers/FeatureLayer'
-      ], options).then(async ([config, Map, Basemap, MapView, WebTileLayer, TileLayer, TileInfo, FeatureLayer]) => {
+      ], options).then(async ([config, Map, MapView, WebTileLayer, TileLayer, TileInfo, FeatureLayer]) => {
         // config设置
         config.request.proxyUrl = 'http://10.100.50.197:2282/Java/proxy.jsp'
         config.request.corsEnabledServers.push('http://10.100.50.71:2282', 'sw.nxstjt.com')
 
         /* 加载天地图 */
-        var map = getTiandituMap(TileInfo, WebTileLayer, Map)
-
-        var layer1 = new FeatureLayer({
-          url: 'http://10.100.50.71:6080/arcgis/rest/services/whMapService/MapServer'
-        })
-
-        var layer2 = new FeatureLayer({
-          url: 'http://10.100.50.71:6080/arcgis/rest/services/whPointService/MapServer'
-        })
-
-        map.add(layer1)
-        map.add(layer2)
+        var map = getTiandituMap(Map, TileInfo, WebTileLayer, FeatureLayer)
 
         // 创建MapView
         var view = new MapView({
