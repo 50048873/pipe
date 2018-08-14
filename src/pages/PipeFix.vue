@@ -10,6 +10,7 @@
     </div>
     <div class="otherBtnWrap">
       <hui-float-ball
+        v-show="addHiddenTroubleAndSignBtn"
         class="addHiddenTroubleRecordBtn"
         left="15"
         bottom="90"
@@ -27,6 +28,7 @@
         </div>
       </hui-float-ball>
       <hui-float-ball
+        v-show="addHiddenTroubleAndSignBtn"
         class="signBtn"
         right="15"
         bottom="90"
@@ -63,7 +65,6 @@ import * as esriLoader from 'esri-loader'
 import {options} from '@/assets/js/config'
 import {getTiandituMap} from '@/assets/js/util'
 import {toKilometre, dateFormat} from '@/assets/js/mixin'
-import {saveInspectedPath} from '@/assets/js/store'
 import * as api from '@/assets/js/api'
 import {mapGetters, mapMutations} from 'vuex'
 import {calDistance} from '@/assets/js/mixin'
@@ -76,7 +77,8 @@ export default {
         startTime: '',
         endTime: '',
         distance: 0
-      }
+      },
+      addHiddenTroubleAndSignBtn: false
     }
   },
   mixins: [toKilometre, dateFormat, calDistance],
@@ -87,9 +89,11 @@ export default {
     }
   },
   methods: {
-    ...mapMutations(['set_signPoint']),
+    ...mapMutations(['set_signPoint', 'set_inspectedPathInfo']),
     startInspect () {
       this.inspecting = !this.inspecting
+
+      this.addHiddenTroubleAndSignBtn = true
 
       // 清除之前的定位并开始巡检中的定位
       this.watchId && this.clearWatch(this.watchId)
@@ -246,13 +250,13 @@ export default {
         let accuracy = position.coords.accuracy
         let time = position.timestamp
 
-        this.inspectedPath.push([longitude, latitude])
-        saveInspectedPath({longitude, latitude, accuracy, time})
+        this.inspectedPathCoord.push([longitude, latitude])
+        this.set_inspectedPathInfo({longitude, latitude, accuracy, time})
 
         // First create a line geometry (this is the Keystone pipeline)
         var polyline = {                 // 自己的巡检路径
           type: "polyline",  // autocasts as new Polyline()
-          paths: this.inspectedPath
+          paths: this.inspectedPathCoord
         };
 
         // Create a symbol for drawing the line
@@ -279,7 +283,7 @@ export default {
         this.view.graphics.add(polylineGraphic);
 
         // 计算已走线路长度
-        var paths = this.inspectedPath
+        var paths = this.inspectedPathCoord
         var len = paths.length
         if (len > 1) {
           var startPoint = paths[len - 2]
@@ -478,10 +482,10 @@ export default {
       this.startPointIsMarked = false   // 是否已标记起点
       this.interval = null              // 其他巡检人id
       this.noInspectPath = []           // 自己的非巡检路径
-      this.inspectedPath = [            // 自己的巡检路径
+      this.inspectedPathCoord = [            // 自己的巡检路径
         // [114.360694, 30.584929],
         // [114.360809, 30.585959]
-      ];
+      ]
 
       this.inspector = [
         {

@@ -20,14 +20,15 @@ export function getSignPoint () {
   })
 }
 
-// 巡检 -> 上传
-export function getReservoirDetailInspectionAdd (data) {
+// 巡检上报 -> 添加巡查隐患和其它
+export function addDanger (data) {
+  const url = baseUrl + '/pipe/DangerController/addDanger.do'
   return $.ajax({
     type: 'POST',
     contentType: false,
     processData: false,
     cache: false,
-    url: baseUrl + '/znb/patrolRecord/addRecord.do',
+    url: url,
     data: data
   })
 }

@@ -4,5 +4,8 @@ export default {
   },
   set_currentInspectorId (state, currentInspectorId) {
     state.currentInspectorId = currentInspectorId
+  },
+  set_inspectedPathInfo (state, inspectedPathInfo) {
+    state.inspectedPathInfo.push(inspectedPathInfo)
   }
 }

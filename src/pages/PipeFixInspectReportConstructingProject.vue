@@ -130,7 +130,7 @@ export default {
         params.append('files', item)
       })
 
-      api.getReservoirDetailInspectionAdd(params)
+      api.addDanger(params)
         .then((res) => {
           if (typeof res === 'string') {
             res = JSON.parse(res)
