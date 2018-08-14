@@ -36,7 +36,7 @@
         <hui-uploader title="签到照片"></hui-uploader>
       </div>
       <div class="signBtnWrap">
-        <a class="btn color-theme">签到</a>
+        <a class="btn" :class="getSignBtnStatusClass" @click="sign">签到</a>
       </div>
     </section>
     <list3 :data="signedData" v-if="currentIndex === 1"></list3>
@@ -181,9 +181,24 @@ export default {
   },
   mixins: [calDistance, _handleDecimalLength],
   computed: {
-    ...mapGetters(['signPoint'])
+    ...mapGetters(['signPoint']),
+    getSignBtnStatusClass () {
+      return this.signInfo.distance <= 50 ? 'color-theme' : 'color-disabled'
+    }
   },
   methods: {
+    sign () {
+      if (this.signInfo.distance <= 50) {
+        this.signInfo.time = moment().format('YYYY-MM-DD HH:mm'),
+        this.$message({
+         content: '签到成功！'
+        })
+      } else {
+        this.$message({
+         content: '50米范围内才能签到（含50米）！'
+        })
+      }
+    },
     tabChange (index) {
       this.currentIndex = index
     },
