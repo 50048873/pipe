@@ -1,5 +1,6 @@
 @import './variable.less';
 @import './animate.less';
+@import './arcgis.less';
 
 body {
   color: @color-text;
@@ -174,6 +175,9 @@ body {
   }
   .submitWrap {
     margin: 10px;
+    .btn {
+      width: 100%;
+    }
   }
   .dateWrap {
     input {
@@ -183,5 +187,16 @@ body {
       -webkit-appearance: none;
       opacity: 0;
     }
+  }
+  .required {
+    margin-left: 4px;
+  }
+}
+
+.router-view {
+  transition: opacity .4s;
+  &.fade-enter,
+  &.fade-leave-to {
+    opacity: 0;
   }
 }

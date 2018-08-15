@@ -409,6 +409,7 @@ export default {
 <style scoped lang="less">
   @import '../assets/less/variable.less';
   .pipeFixSign {
+    z-index: 9;
     padding-bottom: 40px;
     .signInfo {
       margin-bottom: @margin-small;

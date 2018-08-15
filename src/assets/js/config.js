@@ -7,7 +7,7 @@ export const baseUrl = process.env.API_HOST
 // 路径
 export const path = ''
 
-// 这是wamp/www/arcgis部署方案
+// arcgis部署方案
 export const options = {
   // url: '/static/arcgis_js_api/library/4.8/dojo/dojo.js',
   // css: '/static/arcgis_js_api/library/4.8/esri/css/main.css'

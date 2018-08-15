@@ -11,6 +11,38 @@ export function getFilePathUrl () {
   })
 }
 
+// 巡检上报 -> 添加巡查隐患和其它
+export function addDanger (data) {
+  data.forEach((item, key) => {
+    console.log(key, ': ', item)
+  })
+  const url = baseUrl + '/pipe/DangerController/addDanger.do'
+  return $.ajax({
+    type: 'POST',
+    contentType: false,
+    processData: false,
+    cache: false,
+    url: url,
+    data: data
+  })
+}
+
+// 巡检上报 -> 在建工程和道路改造
+export function addPorject (data) {
+  data.forEach((item, key) => {
+    console.log(key, ': ', item)
+  })
+  const url = baseUrl + '/pipe/DangerController/addPorject.do'
+  return $.ajax({
+    type: 'POST',
+    contentType: false,
+    processData: false,
+    cache: false,
+    url: url,
+    data: data
+  })
+}
+
 // 获取签到点
 export function getSignPoint () {
   const url = '/static/signPoint.json'
@@ -20,15 +52,11 @@ export function getSignPoint () {
   })
 }
 
-// 巡检上报 -> 添加巡查隐患和其它
-export function addDanger (data) {
-  const url = baseUrl + '/pipe/DangerController/addDanger.do'
+// 获取签到点
+export function gethiddenTrouble () {
+  const url = '/static/hiddenTrouble.json'
   return $.ajax({
-    type: 'POST',
-    contentType: false,
-    processData: false,
-    cache: false,
-    url: url,
-    data: data
+    type: 'GET',
+    url: url
   })
 }

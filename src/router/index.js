@@ -20,6 +20,7 @@ import PersonalCenter from '@/pages/PersonalCenter'                             
 
 import ProblemList from '@/components/ProblemList'                                                              // 预警列表（首页 -> 巡检抢修 -> 巡检列表）
 import ProblemDetail from '@/components/ProblemDetail'                                                          // 预警详情（首页 -> 巡检抢修 -> 巡检详情）
+import MarkPolygon from '@/components/MarkPolygon'
 
 Vue.use(Router)
 
@@ -69,55 +70,64 @@ let routes = new Router({
       component: PipeFix,
       meta: {
         title: '巡检抢修'
-      }
-    },
-    {
-      path: '/pipeFix/pipeFixInspectReport',
-      redirect: '/pipeFix/pipeFixInspectReport/hiddenTrouble',
-      name: 'PipeFixInspectReport',
-      component: PipeFixInspectReport,
+      },
       children: [
         {
-          path: '/pipeFix/pipeFixInspectReport/hiddenTrouble',
-          name: 'PipeFixHiddenTrouble',
-          component: PipeFixInspectReportHiddenTrouble,
-          meta: {
-            title: '巡检上报'
-          }
+          path: '/pipeFix/pipeFixInspectReport',
+          redirect: '/pipeFix/pipeFixInspectReport/hiddenTrouble',
+          name: 'PipeFixInspectReport',
+          component: PipeFixInspectReport,
+          children: [
+            {
+              path: '/pipeFix/pipeFixInspectReport/hiddenTrouble',
+              name: 'PipeFixHiddenTrouble',
+              component: PipeFixInspectReportHiddenTrouble,
+              meta: {
+                title: '巡检上报'
+              }
+            },
+            {
+              path: '/pipeFix/pipeFixInspectReport/constructingProject',
+              name: 'PipeFixConstructingProject',
+              component: PipeFixInspectReportConstructingProject,
+              meta: {
+                title: '巡检上报'
+              },
+              children: [
+                {
+                  path: '/pipeFix/pipeFixInspectReport/constructingProject/markPolygon',
+                  name: 'MarkPolygon',
+                  component: MarkPolygon,
+                }
+              ]
+            },
+            {
+              path: '/pipeFix/pipeFixInspectReport/roadImprove',
+              name: 'PipeFixRoadImprove',
+              component: PipeFixInspectReportRoadImprove,
+              meta: {
+                title: '巡检上报'
+              }
+            },
+            {
+              path: '/pipeFix/pipeFixInspectReport/other',
+              name: 'PipeFixOther',
+              component: PipeFixInspectReportOther,
+              meta: {
+                title: '巡检上报'
+              }
+            }
+          ]
         },
         {
-          path: '/pipeFix/pipeFixInspectReport/constructingProject',
-          name: 'PipeFixConstructingProject',
-          component: PipeFixInspectReportConstructingProject,
+          path: '/pipeFix/pipeFixSign',
+          name: 'PipeFixSign',
+          component: PipeFixSign,
           meta: {
-            title: '巡检上报'
+            title: '巡检签到'
           }
         },
-        {
-          path: '/pipeFix/pipeFixInspectReport/roadImprove',
-          name: 'PipeFixRoadImprove',
-          component: PipeFixInspectReportRoadImprove,
-          meta: {
-            title: '巡检上报'
-          }
-        },
-        {
-          path: '/pipeFix/pipeFixInspectReport/other',
-          name: 'PipeFixOther',
-          component: PipeFixInspectReportOther,
-          meta: {
-            title: '巡检上报'
-          }
-        }
       ]
-    },
-    {
-      path: '/pipeFix/pipeFixSign',
-      name: 'PipeFixSign',
-      component: PipeFixSign,
-      meta: {
-        title: '巡检签到'
-      }
     },
     {
       path: '/pipeFix/pipeFixList',

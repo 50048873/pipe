@@ -2,50 +2,54 @@
   <div class="page page-hasTab">
     <form class="form" ref="formEle">
       <div class="item-group line-bottom line-top">
-        <h6>发生地点</h6>
+        <h6>发生地点<span class="required color-red">*</span></h6>
         <div class="iconWrap">
-          <input type="text" placeholder="手动输入或者定位" required v-model="params.yhdd">
+          <input type="text" name="place" placeholder="手动输入或者定位" required v-model="params.place">
           <i class="hui-icon-bell"></i>
         </div>
       </div>
       <div class="item-group line-bottom">
-        <h6>上报类型</h6>
+        <h6>上报类型<span class="required color-red">*</span></h6>
         <div>
-          <input type="text" placeholder="请输入（乱用水、乱接管等等）" required v-model="params.yhmc">
+          <input type="text" name="reportType" placeholder="请输入（乱用水、乱接管等等）" required v-model="params.reportType">
         </div>
       </div>
       <div class="hiddenTrouble">
         <h6>备注</h6>
-        <textarea placeholder="请输入备注" v-model="params.yhmx"></textarea>
-        <p class="explain">至少10个字符，已输入{{params.yhmx.length}}个字符</p>
+        <textarea name="descrip" placeholder="请输入备注" v-model="params.descrip"></textarea>
+        <p class="explain">至少10个字符，已输入{{params.descrip.length}}个字符</p>
       </div>
 
       <div class="huiUploaderWrap"><hui-uploader @fileChanged="fileChanged"></hui-uploader></div>
 
       <div class="submitWrap">
-        <a href="javascript:;" class="btn color-theme"  @click.prevent="submit" :disabled="disabled">上报</a>
+        <button class="btn" :class="getSubmitBtnClass" @click.prevent="submit" :disabled="disabled">上报</button>
       </div>
     </form>
   </div>
 </template>
 
 <script>
-import {getServerErrorMessageAsHtml, getUuid} from 'hui/lib/util.js'
+import {getServerErrorMessageAsHtml} from 'hui/lib/util.js'
 import * as api from '@/assets/js/api'
 import {success} from '@/assets/js/config'
+import {mapGetters} from 'vuex'
 export default {
   data () {
     return {
       params: {
-        yhdd: '',
-        yhmc: '',
-        sbbh: '',
-        sbmc: '',
-        jjcd: '',
-        yhmx: '',
+        place: '必胜客欢乐餐厅骏业餐厅',
+        reportType: '消防栓漏水',
+        descrip: '必胜客欢乐餐厅骏业餐厅附近有一处消防栓在滴水',
         files: []
       },
       disabled: false
+    }
+  },
+  computed: {
+    ...mapGetters(['inspectedPathInfo']),
+    getSubmitBtnClass () {
+      return this.disabled ? 'color-disabled' : 'color-theme'
     }
   },
   methods: {
@@ -53,33 +57,21 @@ export default {
       this.params.files = files
     },
     validate () {
-      if (!this.params.yhdd) {
+      if (!this.params.place) {
         this.$message({
-          content: '请输入隐患地点'
+          content: '请输入发生地点'
         })
         return false
       }
-      if (!this.params.yhmc) {
+      if (!this.params.reportType) {
         this.$message({
-          content: '请输入隐患名称'
+          content: '请输入上报类型'
         })
         return false
       }
-      if (!this.params.sbmc) {
+      if (this.params.descrip && this.params.descrip.length < 10) {
         this.$message({
-          content: '请输入设备名称'
-        })
-        return false
-      }
-      if (!this.params.jjcd) {
-        this.$message({
-          content: '请选择紧急程度'
-        })
-        return false
-      }
-      if (this.params.yhmx && this.params.yhmx.length < 10) {
-        this.$message({
-          content: `至少应该输入10个字符，已输入${this.params.yhmx.length}个字符`
+          content: `至少应该输入10个字符，已输入${this.params.descrip.length}个字符`
         })
         return false
       }
@@ -90,8 +82,14 @@ export default {
       this.disabled = true
       let formEle = this.$refs.formEle
       let params = new FormData(formEle)
-      // params.append('pid', getPid())
-      params.append('id', getUuid(32, 16))
+      // 添加其它要传的参数
+      params.append('probType', '4') // 问题类型
+      let coord = this.inspectedPathInfo.slice().pop()
+      if (coord) {
+        params.append('lgtd', coord.longitude) // 经度
+        params.append('lttd', coord.latitude) // 纬度
+      }
+
       this.params.files.forEach(function (item) {
         params.append('files', item)
       })
@@ -103,18 +101,21 @@ export default {
           }
           if (res.status === success) {
             this.$message({
-              content: res.msg
+              content: res.msg,
+              time: 600,
+              closed: () => {
+                this.$router.push('/pipeFix')
+                // this.$destroy()
+              }
             })
-            this.$router.back()
-            this.$destroy()
           } else {
             this.$message({
               content: res.msg
             })
+            this.disabled = false
           }
         }, (err) => {
-          this.$message({content: getServerErrorMessageAsHtml(err, 'ReservoirDetailInspectionAdd.vue->submit'), icon: 'hui-warn'})
-        }).always(() => {
+          this.$message({content: getServerErrorMessageAsHtml(err, 'ReservoirDetailInspectionAdd.vue->submit'), icon: 'hui-icon-warn'})
           this.disabled = false
         })
     }

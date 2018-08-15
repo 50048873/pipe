@@ -1,0 +1,246 @@
+<template>
+  <div class="page markPolygon">
+    <div id="view_markPolygon" class="view_markPolygon">
+      <div id="line-button" class="esri-widget-button esri-widget esri-interactive" title="Draw polyline">
+        <span class="esri-icon-polyline"></span>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+/* eslint-disable */
+import * as esriLoader from 'esri-loader'
+import {options} from '@/assets/js/config'
+import {getTiandituMap} from '@/assets/js/util'
+export default {
+  data () {
+    return {
+    }
+  },
+  methods: {
+    async initPipeFixMap () {
+      // 加载天地图
+      var map = await getTiandituMap()
+
+      esriLoader.loadModules([
+        'esri/config',
+        "esri/Map",
+        "esri/views/MapView",
+        "esri/views/2d/draw/Draw",
+        "esri/Graphic",
+        "esri/geometry/Polyline",
+        "esri/geometry/geometryEngine",
+
+        "dojo/domReady!"
+      ], options).then(async ([config, Map, MapView, Draw, Graphic, Polyline, geometryEngine]) => {
+        // config设置
+        config.request.proxyUrl = 'http://10.100.50.197:2282/Java/proxy.jsp'
+        config.request.corsEnabledServers.push('http://10.100.50.71:2282')
+
+        // 创建MapView
+        var view = new MapView({
+          container: 'view_markPolygon',
+          spatialReference: {
+            wkid: 4326
+          },
+          map: map,
+          center: [114.360694, 30.584929],
+          // 1:scale的图
+          scale: 2000,
+          popup: {
+            dockEnabled: true,
+            dockOptions: {
+              // Disables the dock button from the popup
+              buttonEnabled: true,
+              // Ignore the default sizes that trigger responsive docking
+              breakpoint: {
+                width: 320
+              },
+              position: 'top-center'
+            }
+          }
+        })
+
+        // 移除esri log
+        view.ui._removeComponents(['attribution'])
+
+        view.ui.remove("zoom")
+
+        this.map = map
+        this.view = view
+
+        // add the button for the draw tool
+        view.ui.add("line-button", "top-left");
+
+        view.when(function(event) {
+          var draw = new Draw({
+            view: view
+          });
+
+          // ********************
+          // draw polyline button
+          // ********************
+          var drawLineButton = document.getElementById("line-button");
+          drawLineButton.onclick = function() {
+            view.graphics.removeAll();
+            enableCreateLine(draw, view);
+          }
+        });
+
+        function enableCreateLine(draw, view) {
+          // creates and returns an instance of PolyLineDrawAction
+          // can only draw a line by clicking on the map
+          var action = draw.create("polyline", {
+            mode: "click"
+          });
+
+          // focus the view to activate keyboard shortcuts for sketching
+          view.focus();
+
+          // listen to vertex-add event on the polyline draw action
+          action.on("vertex-add", updateVertices);
+
+          // listen to vertex-remove event on the polyline draw action
+          action.on("vertex-remove", updateVertices);
+
+          // listen to cursor-update event on the polyline draw action
+          action.on("cursor-update", createGraphic);
+
+          // listen to draw-complete event on the polyline draw action
+          action.on("draw-complete", updateVertices);
+
+        }
+
+        // This function is called from the "vertex-add" and "vertex-remove"
+        // events. Checks if the last vertex is making the line intersect itself.
+        function updateVertices(event) {
+          // create a polyline from returned vertices
+          var result = createGraphic(event);
+
+          // if the last vertex is making the line intersects itself,
+          // prevent "vertex-add" or "vertex-remove" from firing
+          if (result.selfIntersects) {
+            event.preventDefault();
+          }
+        }
+
+        // create a new graphic presenting the polyline that is being drawn on the view
+        function createGraphic(event) {
+          var vertices = event.vertices;
+          view.graphics.removeAll();
+
+          // a graphic representing the polyline that is being drawn
+          var graphic = new Graphic({
+            geometry: new Polyline({
+              paths: vertices,
+              spatialReference: view.spatialReference
+            }),
+            symbol: {
+              type: "simple-line", // autocasts as new SimpleFillSymbol
+              color: [4, 90, 141],
+              width: 4,
+              cap: "round",
+              join: "round"
+            }
+          });
+
+          // check the polyline intersects itself.
+          var intersectingFeature = getIntersectingFeature(graphic.geometry);
+
+          // Add a new graphic for the intersecting segment.
+          if (intersectingFeature) {
+            view.graphics.addMany([graphic, intersectingFeature]);
+          }
+          // Just add the graphic representing the polyline if no intersection
+          else {
+            view.graphics.add(graphic);
+          }
+
+          // return the graphic and intersectingSegment
+          return {
+            graphic: graphic,
+            selfIntersects: intersectingFeature
+          }
+        }
+
+        // function that checks if the line intersects itself
+        function isSelfIntersecting(polyline) {
+          if (polyline.paths[0].length < 3) {
+            return false
+          }
+          var line = polyline.clone();
+
+          //get the last segment from the polyline that is being drawn
+          var lastSegment = getLastSegment(polyline);
+          line.removePoint(0, line.paths[0].length - 1);
+
+          // returns true if the line intersects itself, false otherwise
+          return geometryEngine.crosses(lastSegment, line);
+        }
+
+        // Checks if the line intersects itself. If yes, changes the last
+        // segment's symbol giving a visual feedback to the user.
+        function getIntersectingFeature(polyline) {
+          if (isSelfIntersecting(polyline)) {
+            return new Graphic({
+              geometry: getLastSegment(polyline),
+              symbol: {
+                type: "simple-line", // autocasts as new SimpleLineSymbol
+                style: "short-dot",
+                width: 3.5,
+                color: "yellow"
+              }
+            });
+          }
+          return null;
+        }
+
+        // Get the last segment of the polyline that is being drawn
+        function getLastSegment(polyline) {
+          var line = polyline.clone();
+          var lastXYPoint = line.removePoint(0, line.paths[0].length - 1);
+          var existingLineFinalPoint = line.getPoint(0, line.paths[0].length -
+            1);
+
+          return new Polyline({
+            spatialReference: view.spatialReference,
+            hasZ: false,
+            paths: [
+              [
+                [existingLineFinalPoint.x, existingLineFinalPoint.y],
+                [lastXYPoint.x, lastXYPoint.y]
+              ]
+            ]
+          });
+        }
+      })
+    },
+    initSingleDirectionParam () {
+      this.view = null                  // 视图
+      this.map = null                   // 地图
+    }
+  },
+  created () {
+    this.initSingleDirectionParam()
+  },
+  mounted () {
+    this.initPipeFixMap()
+  }
+}
+</script>
+
+<style scoped lang="less">
+  @import '../assets/less/variable.less';
+  .markPolygon {
+    position: fixed;
+    z-index: 9;
+    .view_markPolygon {
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      left: 0;
+    }
+  }
+</style>

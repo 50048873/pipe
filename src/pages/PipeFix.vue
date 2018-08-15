@@ -50,12 +50,15 @@
           <tr>
             <td>{{tableData.startTime | dateFormat('HH:mm:ss')}}</td>
             <td>{{tableData.endTime | dateFormat('HH:mm:ss')}}</td>
-            <td>{{tableData.distance | toKilometre}}公里</td>
+            <td><span v-show="tableData.distance">{{tableData.distance | toKilometre}}公里</span></td>
             <td class="detailBtnWrap"><router-link class="btn btn-mini color-theme" to="/pipeFix/pipeFixList">详情</router-link></td>
           </tr>
         </tbody>
       </table>
     </div>
+    <transition name="fade">
+      <router-view class="router-view"></router-view>
+    </transition>
   </div>
 </template>
 
@@ -133,19 +136,7 @@ export default {
           map: map,
           center: [114.360694, 30.584929],
           // 1:scale的图
-          scale: 2000,
-          popup: {
-            dockEnabled: true,
-            dockOptions: {
-              // Disables the dock button from the popup
-              buttonEnabled: true,
-              // Ignore the default sizes that trigger responsive docking
-              breakpoint: {
-                width: 320
-              },
-              position: 'top-center'
-            }
-          }
+          scale: 2000
         })
 
         // 移除esri log
@@ -160,6 +151,11 @@ export default {
         this.markMultiSignPoint(view, signPoint)
         // mutation签到点
         this.set_signPoint(signPoint)
+
+        // 获取隐患点
+        let hiddenTrouble = await api.gethiddenTrouble()
+        // 标记隐患点
+        this.markMultiHiddenTroublePoint(view, hiddenTrouble)
 
         // 标记自己的位置
         this.watchPositionNoInspect()
@@ -315,29 +311,68 @@ export default {
       console.log('error', error)
     },
     registerPopup (view) {
-      view.on("click", function(event) {
-        event.stopPropagation();
-        console.log('click', event)
-
-        // Get the coordinates of the click on the view
-        // around the decimals to 3 decimals
-        var lat = event.mapPoint.latitude;
-        var lon = event.mapPoint.longitude;
-
-        var centerPoint = view.center.clone();
-
-        view.popup.open({
-            // Set the popup's title to the coordinates of the clicked location
-            title: "Reverse geocode: [" + lon + ", " + lat + "]",
-            location: event.mapPoint, // Set the location of the popup to the clicked location,
-            content: "Use the control in the center of the map to change the location where the popup will dock."
-        });
-      });
+      view.on('click', (event) => {
+          event.stopPropagation()
+          console.log(event)
+          let screenPoint = {
+            x: event.x,
+            y: event.y
+          }
+          let mapPoint = event.mapPoint
+          view.hitTest(screenPoint)
+            .then((res) => {
+              console.log(res)
+              let info = res.results[0]
+              if (info && info.graphic && info.graphic.attributes) {
+                info = info.graphic.attributes
+              }
+              view.popup.open({
+                  // currentDockPosition: 'bottom-center',
+                  dockEnabled: true,
+                  dockOptions: {
+                    // Disables the dock button from the popup
+                    buttonEnabled: true,
+                    // Ignore the default sizes that trigger responsive docking
+                    breakpoint: {
+                      width: 320
+                    },
+                    position: 'top-center'
+                  },
+                  // Set the popup's title to the coordinates of the clicked location
+                  title: "隐患信息",
+                  location: mapPoint, // Set the location of the popup to the clicked location,
+                  content: `<table class="popup-table">
+                    <tbody>
+                      <tr>
+                        <td>隐患时间：</td>
+                        <td>${info.time}</td>
+                        <td>地点：</td>
+                        <td>${info.address}</td>
+                      </tr>
+                      <tr>
+                        <td>隐患描述：</td>
+                        <td>${info.des}</td>
+                        <td>上报人：</td>
+                        <td>${info.reportor}</td>
+                      </tr>
+                      <tr>
+                        <td>状态：</td>
+                        <td>${info.status}</td>
+                        <td class="title"></td>
+                        <td></td>
+                      </tr>
+                    </tbody>
+                  </table>`
+              });
+            })
+        })
     },
-    markSingleSignPoint (view, longitude, latitude) {
+    markSingleSignPoint (view, coord) {
       esriLoader.loadModules([
         "esri/Graphic"
       ], options).then(([Graphic]) => {
+        let longitude = coord.longitude
+        let latitude = coord.latitude
         // First create a point geometry
         var point = {
           type: "point",  // autocasts as new Point()
@@ -366,6 +401,14 @@ export default {
         // Add the line graphic to the view's GraphicsLayer
         view.graphics.add(pointGraphic);
       })
+    },
+    markMultiSignPoint (view, coords) {
+      let len = coords.length
+      if (!len) return
+      for (let i = 0; i < len; i++) {
+        let coord = coords[i]
+        this.markSingleSignPoint(view, coord)
+      }
     },
     markSingleInspector (view, coord) {
       esriLoader.loadModules([
@@ -406,6 +449,14 @@ export default {
         view.graphics.add(pointGraphic);
       })
     },
+    markMultiInspector (view, coords) {
+      let len = coords.length
+      if (!len) return
+      for (let i = 0; i < len; i++) {
+        let coord = coords[i]
+        this.markSingleInspector(view, coord)
+      }
+    },
     markStartPoint (view, coord) {
       esriLoader.loadModules([
         "esri/Graphic"
@@ -422,14 +473,10 @@ export default {
 
         // Create a symbol for drawing the point
         var markerSymbol = {
-          type: "simple-marker",  // autocasts as new SimpleMarkerSymbol()
-          color: 'blue',
-          size: 22,
-          outline: {
-            width: 0,
-            color: [255, 255, 255, 0]
-          },
-          path: "M23.005,21.493L23.005,21.493c-0.639,0.796-1.195,1.594-1.832,2.228c6.607,0.398,8.04,1.752,8.358,2.467  c-0.316,0.794-4.748,2.693-13.526,2.706v-1.39c0.054-0.047,9.468-8.14,9.468-16.553C25.394,5.857,21.175,1.716,16,1.716  c-5.174,0-9.473,4.14-9.473,9.235c0.001,8.731,9.414,16.508,9.468,16.553v1.39c-0.026,0-0.05,0.001-0.076,0.001  c-8.836,0.08-13.293-1.91-13.532-2.627c0.24-0.636,1.274-1.908,7.324-2.387c-0.557-0.638-1.193-1.434-1.831-2.23  C2.945,22.209,0,23.402,0,26.189c0,4.06,10.03,5.094,15.999,5.094S32,30.169,32,26.189C32.001,23.244,28.339,21.971,23.005,21.493z   M8.403,11.189c0-4.21,3.389-7.597,7.597-7.597c4.208,0,7.598,3.387,7.598,7.597c0,1.419-0.393,2.74-1.064,3.874H20.64  c0.063-0.21,0.147-0.452,0.259-0.729c-1.691,0.037-3.3,0.049-4.823,0.037c-0.563-0.006-1.061-0.096-1.493-0.271v-1.763H16v-0.671  h-1.418v-1.446h1.493v-0.017h0.438v2.022c0,0.709,0.346,1.063,1.036,1.063h1.874c0.666,0,1.045-0.261,1.138-0.783  c0.056-0.28,0.112-0.721,0.169-1.324c-0.28-0.094-0.517-0.184-0.71-0.271c-0.03,0.554-0.065,0.97-0.104,1.25  c-0.042,0.305-0.238,0.458-0.587,0.458h-1.604c-0.337,0-0.504-0.168-0.504-0.504V9.865h2.201v0.317h0.709V6.749h-3.797V7.42h3.088  v1.772h-2.91v1h-0.438V9.538h-1.754V8.204h1.567V7.523h-1.567V6.198h-0.728v1.325h-1.586v0.681h1.586v1.334h-1.913v0.681h2.202  v3.475c-0.386-0.298-0.695-0.698-0.928-1.199c0.068-0.513,0.113-1.073,0.135-1.679l-0.69-0.037  c-0.038,1.667-0.293,2.914-0.766,3.741c0.15,0.292,0.287,0.584,0.411,0.876c0.326-0.509,0.577-1.171,0.751-1.986  c0.55,1.06,1.578,1.605,3.083,1.633c1.118,0.022,2.566,0.032,4.316,0.028v0.002h2.333c-1.322,2.225-3.742,3.713-6.527,3.713  C11.792,18.785,8.403,15.28,8.403,11.189z"
+          type: "picture-marker",  // autocasts as new PictureMarkerSymbol()
+          width: 22,
+          height: 22,
+          url: '/static/svg/startPoint.svg'
         }
 
         // Create a graphic and add the geometry and symbol to it
@@ -443,21 +490,44 @@ export default {
         view.graphics.add(pointGraphic);
       })
     },
-    markMultiSignPoint (view, coords) {
-      let len = coords.length
-      if (!len) return
-      for (let i = 0; i < len; i++) {
-        let longitude = coords[i].longitude
-        let latitude = coords[i].latitude
-        this.markSingleSignPoint(view, longitude, latitude)
-      }
+    markSingleHiddenTroublePoint (view, coord) {
+      esriLoader.loadModules([
+        "esri/Graphic"
+      ], options).then(([Graphic]) => {
+        let longitude = coord.longitude
+        let latitude = coord.latitude
+
+        // First create a point geometry
+        var point = {
+          type: "point",  // autocasts as new Point()
+          longitude: longitude,
+          latitude: latitude
+        }
+
+        // Create a symbol for drawing the point
+        var markerSymbol = {
+          type: "picture-marker",  // autocasts as new PictureMarkerSymbol()
+          width: 16,
+          height: 16,
+          url: '/static/svg/icon-hiddenTrouble.svg'
+        }
+
+        // Create a graphic and add the geometry and symbol to it
+        var pointGraphic = new Graphic({
+          geometry: point,
+          symbol: markerSymbol,
+          attributes: coord
+        })
+        // Add the line graphic to the view's GraphicsLayer
+        view.graphics.add(pointGraphic);
+      })
     },
-    markMultiInspector (view, coords) {
+    markMultiHiddenTroublePoint (view, coords) {
       let len = coords.length
       if (!len) return
       for (let i = 0; i < len; i++) {
         let coord = coords[i]
-        this.markSingleInspector(view, coord)
+        this.markSingleHiddenTroublePoint(view, coord)
       }
     },
     getOtherInspectorInfo () {
@@ -605,10 +675,4 @@ export default {
       }
     }
   }
-</style>
-
-<style>
-  .esri-view-width-xsmall .esri-popup--is-docked-top-center .esri-popup__main-container, .esri-view-width-xsmall .esri-popup--is-docked-bottom-center .esri-popup__main-container {
-    left: 0;
-}
 </style>

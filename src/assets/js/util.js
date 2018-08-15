@@ -6,10 +6,9 @@ export function getTiandituMap () {
     'esri/Map',
     'esri/views/MapView',
     'esri/layers/WebTileLayer',
-    'esri/layers/TileLayer',
     'esri/layers/support/TileInfo',
     'esri/layers/FeatureLayer'
-  ], options).then(([config, Map, MapView, WebTileLayer, TileLayer, TileInfo, FeatureLayer]) => {
+  ], options).then(([config, Map, MapView, WebTileLayer, TileInfo, FeatureLayer]) => {
     // 首先我们设定瓦片信息，天地图经纬度地图的切片信息全部使用该信息设定
     var tileInfo = new TileInfo({
       dpi: 90.71428571427429,
@@ -58,11 +57,11 @@ export function getTiandituMap () {
     })
 
     var layer1 = new FeatureLayer({
-      url: 'http://10.100.50.71:6080/arcgis/rest/services/whMapService/MapServer'
+      url: 'http://sw.nxstjt.com/arcgis/rest/services/whpipeService/MapServer'
     })
 
     var layer2 = new FeatureLayer({
-      url: 'http://10.100.50.71:6080/arcgis/rest/services/whPointService/MapServer'
+      url: 'http://sw.nxstjt.com/arcgis/rest/services/whpointService/MapServer'
     })
 
     // 创建地图，不设置底图，如果设置底图会造成坐标系无法被转换成 ESPG:4326 (WGS1984)

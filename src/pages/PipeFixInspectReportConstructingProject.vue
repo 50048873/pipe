@@ -4,59 +4,62 @@
       <div class="item-group line-bottom line-top">
         <h6>工程区域</h6>
         <div class="btnWrap">
-          <a href="javascript:;" class="btn btn-mini color-theme">标面</a>
+          <a class="btn btn-mini color-theme extend-click" @click="markPolygon">标面</a>
         </div>
       </div>
       <div class="item-group line-bottom">
         <h6>工程名称</h6>
         <div>
-          <input type="text" placeholder="请输入工程名称" required v-model="params.gcmc">
+          <input type="text" name="areaname" placeholder="请输入工程名称" required v-model="params.areaname">
         </div>
       </div>
       <div class="item-group line-bottom">
         <h6>施工单位</h6>
         <div>
-          <input type="text" placeholder="请输入施工单位" v-model="params.sgdw">
+          <input type="text" name="buildTeam" placeholder="请输入施工单位" v-model="params.buildTeam">
         </div>
       </div>
       <div class="item-group line-bottom">
         <h6>开工日期</h6>
         <div class="dateWrap">
-          <input type="date" placeholder="请输入开工日期" required v-model="params.startDate">
-          <span>{{params.startDate}}</span>
+          <input type="date" placeholder="请输入开工日期" required v-model="params.commencementDate">
+          <span>{{params.commencementDate}}</span>
         </div>
       </div>
       <div class="item-group line-bottom">
         <h6>竣工日期</h6>
         <div class="dateWrap">
-          <input type="date" placeholder="请输入竣工日期" required v-model="params.endDate">
-          <span>{{params.endDate}}</span>
+          <input type="date" placeholder="请输入竣工日期" required v-model="params.completionDate">
+          <span>{{params.completionDate}}</span>
         </div>
       </div>
       <div class="item-group line-bottom">
         <h6>联系人</h6>
         <div>
-          <input type="text" placeholder="请输入联系人" v-model="params.lxr" @focus="focus">
+          <input type="text" name="linkman" placeholder="请输入联系人" v-model="params.linkman" @focus="focus">
         </div>
       </div>
       <div class="item-group line-bottom">
         <h6>联系人电话</h6>
         <div>
-          <input type="text" placeholder="请输入手机号" v-model="params.lxrdh" @focus="focus">
+          <input type="text" name="phone" placeholder="请输入手机号" v-model="params.phone" @focus="focus">
         </div>
       </div>
       <div class="hiddenTrouble">
         <h6>备注</h6>
-        <textarea placeholder="请输入备注" v-model="params.bz" @focus="focus"></textarea>
-        <p class="explain">至少10个字符，已输入{{params.bz.length}}个字符</p>
+        <textarea name="remark" placeholder="请输入备注" v-model="params.remark" @focus="focus"></textarea>
+        <p class="explain">至少10个字符，已输入{{params.remark.length}}个字符</p>
       </div>
 
       <div class="huiUploaderWrap"><hui-uploader des="注：包括工程公示牌、施工平面图等内容" @fileChanged="fileChanged"></hui-uploader></div>
 
       <div class="submitWrap">
-        <a href="javascript:;" class="btn color-theme"  @click.prevent="submit" :disabled="disabled">上报</a>
+        <button class="btn" :class="getSubmitBtnClass" @click.prevent="submit" :disabled="disabled">上报</button>
       </div>
     </form>
+    <transition name="fade">
+      <router-view class="router-view"></router-view>
+    </transition>
   </div>
 </template>
 
@@ -65,49 +68,54 @@ import {getServerErrorMessageAsHtml, getUuid} from 'hui/lib/util.js'
 import * as api from '@/assets/js/api'
 import {success} from '@/assets/js/config'
 import {androidInputBugFixEvent} from '@/assets/js/mixin'
+import moment from 'moment'
 export default {
   mixins: [androidInputBugFixEvent],
   data () {
     return {
       params: {
-        gcmc: '',
-        sgdw: '',
-        startDate: '2016-05-20',
-        endDate: '2018-09-30',
-        lxr: '',
-        lxrdh: '',
-        bz: '',
+        areaname: '骏业财富广场',
+        buildTeam: '中建三局',
+        commencementDate: '2016-05-20',
+        completionDate: '2018-09-30',
+        linkman: '胡工',
+        phone: '13800000000',
+        remark: '项目已封顶，正在进行外立面施工',
         files: []
       },
-      disabled: false
+      disabled: false,
+      mapIsVisibled: false
+    }
+  },
+  computed: {
+    getSubmitBtnClass () {
+      return this.disabled ? 'color-disabled' : 'color-theme'
     }
   },
   methods: {
+    markPolygon () {
+      // this.mapIsVisibled = true
+      this.$router.push('/pipeFix/pipeFixInspectReport/constructingProject/markPolygon')
+    },
     fileChanged (files) {
       this.params.files = files
     },
     validate () {
-      if (!this.params.yhdd) {
+      if (!this.params.areaname) {
         this.$message({
-          content: '请输入隐患地点'
+          content: '请输入工程名称'
         })
         return false
       }
-      if (!this.params.gcmc) {
+      if (!this.params.commencementDate) {
         this.$message({
-          content: '请输入隐患名称'
+          content: '请输入开工日期'
         })
         return false
       }
-      if (!this.params.sbmc) {
+      if (!this.params.completionDate) {
         this.$message({
-          content: '请输入设备名称'
-        })
-        return false
-      }
-      if (!this.params.jjcd) {
-        this.$message({
-          content: '请选择紧急程度'
+          content: '请输入竣工日期'
         })
         return false
       }
@@ -124,31 +132,40 @@ export default {
       this.disabled = true
       let formEle = this.$refs.formEle
       let params = new FormData(formEle)
-      // params.append('pid', getPid())
-      params.append('id', getUuid(32, 16))
+
+      params.append('commencementDate', moment(this.params.commencementDate).format('YYYY/M/D'))
+      params.append('completionDate', moment(this.params.completionDate).format('YYYY/M/D'))
+
+      // 添加其它要传的参数
+      params.append('type', '2') // 问题类型
+      params.append('areaId', getUuid(32, 16)) // 问题类型
+
       this.params.files.forEach(function (item) {
         params.append('files', item)
       })
 
-      api.addDanger(params)
+      api.addPorject(params)
         .then((res) => {
           if (typeof res === 'string') {
             res = JSON.parse(res)
           }
           if (res.status === success) {
             this.$message({
-              content: res.msg
+              content: res.msg,
+              time: 600,
+              closed: () => {
+                this.$router.push('/pipeFix')
+                // this.$destroy()
+              }
             })
-            this.$router.back()
-            this.$destroy()
           } else {
             this.$message({
               content: res.msg
             })
+            this.disabled = false
           }
         }, (err) => {
-          this.$message({content: getServerErrorMessageAsHtml(err, 'ReservoirDetailInspectionAdd.vue->submit'), icon: 'hui-warn'})
-        }).always(() => {
+          this.$message({content: getServerErrorMessageAsHtml(err, 'ReservoirDetailInspectionAdd.vue->submit'), icon: 'hui-icon-warn'})
           this.disabled = false
         })
     }

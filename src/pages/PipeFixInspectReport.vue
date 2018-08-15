@@ -37,5 +37,6 @@ export default {
 <style scoped lang="less">
   @import '../assets/less/variable.less';
   .pipeFixInspectReport {
+    z-index: 9;
   }
 </style>
