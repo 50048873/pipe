@@ -136,55 +136,78 @@ export default {
     async initPipeFixMap () {
       // 加载天地图
       var map = await getTiandituMap()
-
-      esriLoader.loadModules([
+      let [MapView] = await esriLoader.loadModules([
         'esri/views/MapView',
-        'esri/geometry/Point'
-      ], options).then(async ([MapView, Point]) => {
-        // 创建MapView
-        var view = new MapView({
-          container: 'view_pipeFix',
-          spatialReference: {
-            wkid: 4326
-          },
-          map: map,
-          center: [114.360694, 30.584929],
-          // 1:scale的图
-          scale: 2000
+      ], options)
+
+      // 创建MapView
+      var view = new MapView({
+        container: 'view_pipeFix',
+        spatialReference: {
+          wkid: 4326
+        },
+        map: map,
+        center: [114.360694, 30.584929],
+        // 1:scale的图
+        scale: 2000
+      })
+
+      // 移除esri log
+      view.ui._removeComponents(['attribution'])
+      //移除缩放图标
+      view.ui.remove("zoom")
+
+      this.map = map
+      this.view = view
+
+      // 获取签到点
+      let signPoint = await api.getSignPoint()
+      // 标记签到点
+      this.markMultiSignPoint(signPoint)
+      // mutation签到点
+      this.set_signPoint(signPoint)
+
+      // 获取隐患点
+      let hiddenTroubleCoords = await api.gethiddenTrouble()
+      // 标记隐患点
+      this.markMultiHiddenTroublePoint(hiddenTroubleCoords)
+
+      // 标记自己的位置
+      this.watchPositionNoInspect()
+
+      // 标记其他人的位置
+      this.handleOtherInspector()
+
+      // 注册点击事件
+      this.registerPopup()
+
+      // 注册地图移动事件
+      this.registerMove()
+    },
+    registerMove () {
+      let x = 0
+      let y = 0
+      this.view.on('pointer-enter', (evt) => {
+        x = evt.x
+        y = evt.y
+      })
+      this.view.on('pointer-move', (evt) => {
+        this.$refs.inspectorNameWrap.style.display = 'none'
+        x = evt.x - x
+        y = evt.y - y
+        this.otherInspector.forEach((item) => {
+          item.x += x
+          item.y += y
         })
-
-        // 移除esri log
-        view.ui._removeComponents(['attribution'])
-
-        this.map = map
-        this.view = view
-
-        // 获取签到点
-        let signPoint = await api.getSignPoint()
-        // 标记签到点
-        this.markMultiSignPoint(view, signPoint)
-        // mutation签到点
-        this.set_signPoint(signPoint)
-
-        // 获取隐患点
-        let hiddenTrouble = await api.gethiddenTrouble()
-        // 标记隐患点
-        this.markMultiHiddenTroublePoint(view, hiddenTrouble)
-
-        // 标记自己的位置
-        this.watchPositionNoInspect()
-
-        // 标记其他人的位置
-        this.handleOtherInspector()
-
-        // 注册点击事件
-        this.registerPopup(view)
+      })
+      this.view.on('pointer-leave', (evt) => {
+        this.$refs.inspectorNameWrap.style.display = 'block'
       })
     },
     async handleOtherInspector () {
       let firstInfo = await this.getOtherInspectorInfo()
       // 标记其他巡检人初始位置
-      this.markMultiInspector(this.view, firstInfo)
+      this.markMultiInspector(firstInfo)
 
       this.interval = setInterval(() => {
         this.getOtherInspectorInfo()
@@ -196,7 +219,7 @@ export default {
             this.view.graphics.removeMany(arr)
 
             // 标记其他巡检人新的位置
-            this.markMultiInspector(this.view, res)
+            this.markMultiInspector(res)
           })
       }, 3000)
     },
@@ -229,7 +252,18 @@ export default {
       })
       this.view.graphics.remove(graphic)
 
-      this.markSingleInspector(this.view, {longitude, latitude, id: this.currentInspectorId})
+      this.markPoint({
+        width: '26px',
+        height: '26px',
+        coord: {
+          longitude,
+          latitude
+        },
+        attributes: {
+          id: 0
+        },
+        svg: 'inspector-me.svg'
+      })
       this.view.goTo([longitude, latitude])
     },
     watchPositionInspecting () {
@@ -306,7 +340,13 @@ export default {
 
         // 标记起始点
         if (!this.startPointIsMarked) {
-          this.markStartPoint(this.view, {longitude, latitude})
+          // this.markStartPoint(this.view, {longitude, latitude})
+          this.markPoint({
+            width: '32px',
+            height: '32px',
+            coord: {longitude, latitude},
+            svg: 'startPoint.svg'
+          })
           this.startPointIsMarked = true
         }
 
@@ -317,15 +357,26 @@ export default {
           }
         })
         this.view.graphics.remove(graphic)
-        this.markSingleInspector(this.view, {longitude, latitude, id: this.currentInspectorId})
+        this.markPoint({
+          width: '26px',
+          height: '26px',
+          coord: {
+            longitude,
+            latitude
+          },
+          attributes: {
+            id: 0
+          },
+          svg: 'inspector-me.svg'
+        })
         this.view.goTo([longitude, latitude])
       })
     },
     error (error) {
       console.log('error', error)
     },
-    registerPopup (view) {
-      view.on('click', (event) => {
+    registerPopup () {
+      this.view.on('click', (event) => {
           event.stopPropagation()
           console.log(event)
           let screenPoint = {
@@ -333,14 +384,14 @@ export default {
             y: event.y
           }
           let mapPoint = event.mapPoint
-          view.hitTest(screenPoint)
+          this.view.hitTest(screenPoint)
             .then((res) => {
               console.log(res)
               let info = res.results[0]
               if (info && info.graphic && info.graphic.attributes) {
                 info = info.graphic.attributes
               }
-              view.popup.open({
+              this.view.popup.open({
                   // currentDockPosition: 'bottom-center',
                   dockEnabled: true,
                   dockOptions: {
@@ -381,50 +432,7 @@ export default {
             })
         })
     },
-    markSingleSignPoint (view, coord) {
-      esriLoader.loadModules([
-        "esri/Graphic"
-      ], options).then(([Graphic]) => {
-        let longitude = coord.longitude
-        let latitude = coord.latitude
-        // First create a point geometry
-        var point = {
-          type: "point",  // autocasts as new Point()
-          longitude: longitude,
-          latitude: latitude
-        }
-
-        // Create a symbol for drawing the point
-        var markerSymbol = {
-          type: "simple-marker",  // autocasts as new SimpleMarkerSymbol()
-          color: [255, 0, 0],
-          size: 16,
-          outline: {
-            width: 0,
-            color: [255, 255, 255, 0]
-          },
-          xoffset: 16,
-          yoffset: 16,
-          path: "M6.407,0h52.577c0,0,0.422,0,0.547,0.141c0.193,0.217,0.167,0.468,0.167,0.468v12.453h33.895V70.12H51.848V59.455H18.835V100H6.407V0z"
-        }
-        // Create a graphic and add the geometry and symbol to it
-        var pointGraphic = new Graphic({
-          geometry: point,
-          symbol: markerSymbol
-        })
-        // Add the line graphic to the view's GraphicsLayer
-        view.graphics.add(pointGraphic);
-      })
-    },
-    markMultiSignPoint (view, coords) {
-      let len = coords.length
-      if (!len) return
-      for (let i = 0; i < len; i++) {
-        let coord = coords[i]
-        this.markSingleSignPoint(view, coord)
-      }
-    },
-    markSingleInspector (view, coord) {
+    markPoint ({coord, pointType = 'point', SymbolType = 'picture-marker', svg, width, height, attributes}) {
       esriLoader.loadModules([
         "esri/Graphic"
       ], options).then(([Graphic]) => {
@@ -433,118 +441,70 @@ export default {
 
         // First create a point geometry
         var point = {
-          type: "point",  // autocasts as new Point()
+          type: pointType,  // autocasts as new Point()
           longitude: longitude,
           latitude: latitude
         }
 
-        var color = coord.id === this.currentInspectorId ? 'orange' : 'blue'
-
         // Create a symbol for drawing the point
         var markerSymbol = {
-          type: "simple-marker",  // autocasts as new SimpleMarkerSymbol()
-          color: color,
-          size: 22,
-          outline: {
-            width: 0,
-            color: [255, 255, 255, 0]
-          },
-          path: "M57.083,57.722v2.344c4.87,0.671,8.251,2.122,8.251,3.81c0,2.324-6.398,4.208-14.292,4.208v-3.601h2.967V51.455h4.063V40.62  c-0.791-1.182-3.344-1.161-3.344-1.161h-2.436v-0.569c1.51-0.521,2.601-1.938,2.601-3.625c0-2.126-1.724-3.85-3.851-3.85  s-3.851,1.724-3.851,3.85c0,1.687,1.091,3.104,2.601,3.625v0.569h-2.313c-2.711,0-3.468,1.161-3.468,1.161v10.964h3.935v12.898  h3.095v3.601c-7.893,0-14.292-1.884-14.292-4.208c0-1.688,3.381-3.139,8.25-3.81v-2.344c-8.068,0.834-13.917,3.292-13.917,6.195  c0,3.59,8.936,6.5,19.958,6.5c11.022,0,19.958-2.91,19.958-6.5C71,61.014,65.151,58.556,57.083,57.722z"
+          type: SymbolType,  // autocasts as new PictureMarkerSymbol()
+          width: width,
+          height: height,
+          url: '/static/svg/' + svg
         }
 
         // Create a graphic and add the geometry and symbol to it
         var pointGraphic = new Graphic({
           geometry: point,
           symbol: markerSymbol,
-          attributes: coord
+          attributes: attributes || coord
         })
         // console.log(pointGraphic)
         // Add the line graphic to the view's GraphicsLayer
-        view.graphics.add(pointGraphic);
+        this.view.graphics.add(pointGraphic);
       })
     },
-    markMultiInspector (view, coords) {
-      let len = coords.length
+    markMultiSignPoint (coords) {
+      let len = coords && coords.length
       if (!len) return
       for (let i = 0; i < len; i++) {
         let coord = coords[i]
-        this.markSingleInspector(view, coord)
+        this.markPoint({
+          width: '26px',
+          height: '26px',
+          coord,
+          svg: 'flag.svg'
+        })
       }
     },
-    markStartPoint (view, coord) {
-      esriLoader.loadModules([
-        "esri/Graphic"
-      ], options).then(([Graphic]) => {
-        let longitude = coord.longitude
-        let latitude = coord.latitude
-
-        // First create a point geometry
-        var point = {
-          type: "point",  // autocasts as new Point()
-          longitude: longitude,
-          latitude: latitude
-        }
-
-        // Create a symbol for drawing the point
-        var markerSymbol = {
-          type: "picture-marker",  // autocasts as new PictureMarkerSymbol()
-          width: 22,
-          height: 22,
-          url: '/static/svg/startPoint.svg'
-        }
-
-        // Create a graphic and add the geometry and symbol to it
-        var pointGraphic = new Graphic({
-          geometry: point,
-          symbol: markerSymbol,
-          attributes: coord
-        })
-        // console.log(pointGraphic)
-        // Add the line graphic to the view's GraphicsLayer
-        view.graphics.add(pointGraphic);
-      })
-    },
-    markSingleHiddenTroublePoint (view, coord) {
-      esriLoader.loadModules([
-        "esri/Graphic"
-      ], options).then(([Graphic]) => {
-        let longitude = coord.longitude
-        let latitude = coord.latitude
-
-        // First create a point geometry
-        var point = {
-          type: "point",  // autocasts as new Point()
-          longitude: longitude,
-          latitude: latitude
-        }
-
-        // Create a symbol for drawing the point
-        var markerSymbol = {
-          type: "picture-marker",  // autocasts as new PictureMarkerSymbol()
-          width: 16,
-          height: 16,
-          url: '/static/svg/icon-hiddenTrouble.svg'
-        }
-
-        // Create a graphic and add the geometry and symbol to it
-        var pointGraphic = new Graphic({
-          geometry: point,
-          symbol: markerSymbol,
-          attributes: coord
-        })
-        // Add the line graphic to the view's GraphicsLayer
-        view.graphics.add(pointGraphic);
-      })
-    },
-    markMultiHiddenTroublePoint (view, coords) {
-      let len = coords.length
+    markMultiInspector (coords) {
+      let len = coords && coords.length
       if (!len) return
       for (let i = 0; i < len; i++) {
         let coord = coords[i]
-        this.markSingleHiddenTroublePoint(view, coord)
+        this.markPoint({
+          width: '26px',
+          height: '26px',
+          coord: coord,
+          svg: 'inspector-other.svg'
+        })
       }
     },
-    markOtherInspectorName1 (res) {
+    markMultiHiddenTroublePoint (coords) {
+      let len = coords && coords.length
+      if (!len) return
+      for (let i = 0; i < len; i++) {
+        let coord = coords[i]
+        this.markPoint({
+          width: '26px',
+          height: '26px',
+          coord,
+          svg: 'hiddenTrouble.svg'
+        })
+      }
+    },
+    addOtherInspectorName1 (res) {
       esriLoader.loadModules([
         "esri/geometry/Point"
       ], options).then(([Point]) => {
@@ -578,7 +538,7 @@ export default {
       })
 
       // 标记所有巡检人的姓名小窗
-      this.markOtherInspectorName1(arr)
+      this.addOtherInspectorName1(arr)
 
       return arr
     },
@@ -589,11 +549,11 @@ export default {
       this.startPointIsMarked = false   // 是否已标记起点
       this.interval = null              // 其他巡检人id
       this.noInspectPath = []           // 自己的非巡检路径
-      this.inspectedPathCoord = [            // 自己的巡检路径
-      this.firstLoadName = false
+      this.inspectedPathCoord = [           // 自己的巡检路径
         // [114.360694, 30.584929],
         // [114.360809, 30.585959]
       ]
+      this.firstLoadName = false
     }
   },
   created () {
@@ -652,7 +612,8 @@ export default {
       position: fixed;
       top: 10px;
       right: 10px;
-      left: 57px;
+      // left: 57px;
+      left: 10px;
     }
     .tableWrap {
       position: fixed;
