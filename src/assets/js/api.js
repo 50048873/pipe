@@ -52,9 +52,18 @@ export function getSignPoint () {
   })
 }
 
-// 获取签到点
+// 获取隐患信息
 export function gethiddenTrouble () {
   const url = '/static/hiddenTrouble.json'
+  return $.ajax({
+    type: 'GET',
+    url: url
+  })
+}
+
+// 获取巡检人信息
+export function getInspector () {
+  const url = '/static/inspector.json'
   return $.ajax({
     type: 'GET',
     url: url

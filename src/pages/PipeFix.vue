@@ -56,6 +56,12 @@
         </tbody>
       </table>
     </div>
+    <div class="inspectorNameWrap" ref="inspectorNameWrap">
+      <a :href="'tel:' + item.tel" class="nameItem" v-for="item in otherInspector" :key="item.id" :style="getNameItemStyle(item)">
+        <span>{{item.name}}</span>
+        <span class="hui-icon-phone"></span>
+      </a>
+    </div>
     <transition name="fade">
       <router-view class="router-view"></router-view>
     </transition>
@@ -81,7 +87,8 @@ export default {
         endTime: '',
         distance: 0
       },
-      addHiddenTroubleAndSignBtn: false
+      addHiddenTroubleAndSignBtn: false,
+      otherInspector: []
     }
   },
   mixins: [toKilometre, dateFormat, calDistance],
@@ -93,6 +100,12 @@ export default {
   },
   methods: {
     ...mapMutations(['set_signPoint', 'set_inspectedPathInfo']),
+    getNameItemStyle (item) {
+      return {
+        top: item.y + 'px',
+        left: item.x + 'px'
+      }
+    },
     startInspect () {
       this.inspecting = !this.inspecting
 
@@ -125,8 +138,9 @@ export default {
       var map = await getTiandituMap()
 
       esriLoader.loadModules([
-        'esri/views/MapView'
-      ], options).then(async ([MapView]) => {
+        'esri/views/MapView',
+        'esri/geometry/Point'
+      ], options).then(async ([MapView, Point]) => {
         // 创建MapView
         var view = new MapView({
           container: 'view_pipeFix',
@@ -530,20 +544,43 @@ export default {
         this.markSingleHiddenTroublePoint(view, coord)
       }
     },
-    getOtherInspectorInfo () {
+    markOtherInspectorName1 (res) {
+      esriLoader.loadModules([
+        "esri/geometry/Point"
+      ], options).then(([Point]) => {
+        if (this.firstLoadName) {
+          res.forEach((item) => {
+            let mapPoint = new Point({
+              longitude: item.longitude,
+              latitude: item.latitude
+            })
+            let position = this.view.toScreen(mapPoint)
+            item.x = position.x
+            item.y = position.y
+          })
+          this.otherInspector = res
+        }
+        this.firstLoadName = true
+      })
+    },
+    async getOtherInspectorInfo () {
       let getRandomPosition = () => {
         return Math.random() / 10000
       }
-      return new Promise((resolve, reject) => {
-        let arr = this.inspector.filter((item) => {
-          return item.id !== this.currentInspectorId
-        })
-        arr.forEach((item) => {
-          item.longitude += getRandomPosition()
-          item.latitude += getRandomPosition()
-        })
-        resolve(arr)
+      let res = await api.getInspector()
+
+      let arr = res.filter((item) => {
+        return item.id !== this.currentInspectorId
       })
+      arr.forEach((item) => {
+        item.longitude += getRandomPosition()
+        item.latitude += getRandomPosition()
+      })
+
+      // 标记所有巡检人的姓名小窗
+      this.markOtherInspectorName1(arr)
+
+      return arr
     },
     initSingleDirectionParam () {
       this.view = null                  // 视图
@@ -553,32 +590,9 @@ export default {
       this.interval = null              // 其他巡检人id
       this.noInspectPath = []           // 自己的非巡检路径
       this.inspectedPathCoord = [            // 自己的巡检路径
+      this.firstLoadName = false
         // [114.360694, 30.584929],
         // [114.360809, 30.585959]
-      ]
-
-      this.inspector = [
-        {
-          id: 0,
-          longitude: 114.360287112168,
-          latitude: 30.58497896868112,
-          name: '巡检人一',
-          tel: 13800000000
-        },
-        {
-          id: 1,
-          longitude: 114.36105805753392,
-          latitude: 30.58454114785602,
-          name: '巡检人二',
-          tel: 13800000000
-        },
-        {
-          id: 2,
-          longitude: 114.35998254115928,
-          latitude: 30.583922487994503,
-          name: '巡检人三',
-          tel: 13800000000
-        }
       ]
     }
   },
@@ -671,6 +685,26 @@ export default {
           .detailBtnWrap {
             font-size: 0;
           }
+        }
+      }
+    }
+    .inspectorNameWrap {
+      .nameItem {
+        position: absolute;
+        z-index: 9;
+        background-color: white;
+        padding: 5px 10px;
+        border-radius: 4px;
+        top: 0;
+        left: 0;
+        z-index: 10;
+        white-space: nowrap;
+        font-size: 10px;
+        margin-left: 15px;
+        margin-top: -10px;
+        box-shadow: 0 0 1px 0 rgba(0, 0, 0, 0.2);
+        [class*="hui-icon"] {
+          color: @color-theme
         }
       }
     }
