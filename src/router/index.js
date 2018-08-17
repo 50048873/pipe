@@ -20,7 +20,8 @@ import PersonalCenter from '@/pages/PersonalCenter'                             
 
 import ProblemList from '@/components/ProblemList'                                                              // 预警列表（首页 -> 巡检抢修 -> 巡检列表）
 import ProblemDetail from '@/components/ProblemDetail'                                                          // 预警详情（首页 -> 巡检抢修 -> 巡检详情）
-import MarkPolygon from '@/components/MarkPolygon'
+import MarkPolygon from '@/components/MarkPolygon'                                                              // 标面
+import MarkPolyline from '@/components/MarkPolyline'                                                            // 标线
 
 Vue.use(Router)
 
@@ -80,7 +81,7 @@ let routes = new Router({
           children: [
             {
               path: '/pipeFix/pipeFixInspectReport/hiddenTrouble',
-              name: 'PipeFixHiddenTrouble',
+              name: 'PipeFixInspectReportHiddenTrouble',
               component: PipeFixInspectReportHiddenTrouble,
               meta: {
                 title: '巡检上报'
@@ -88,7 +89,7 @@ let routes = new Router({
             },
             {
               path: '/pipeFix/pipeFixInspectReport/constructingProject',
-              name: 'PipeFixConstructingProject',
+              name: 'PipeFixInspectReportConstructingProject',
               component: PipeFixInspectReportConstructingProject,
               meta: {
                 title: '巡检上报'
@@ -103,15 +104,22 @@ let routes = new Router({
             },
             {
               path: '/pipeFix/pipeFixInspectReport/roadImprove',
-              name: 'PipeFixRoadImprove',
+              name: 'PipeFixInspectReportRoadImprove',
               component: PipeFixInspectReportRoadImprove,
               meta: {
                 title: '巡检上报'
-              }
+              },
+              children: [
+                {
+                  path: '/pipeFix/pipeFixInspectReport/constructingProject/markPolyline',
+                  name: 'MarkPolyline',
+                  component: MarkPolyline,
+                }
+              ]
             },
             {
               path: '/pipeFix/pipeFixInspectReport/other',
-              name: 'PipeFixOther',
+              name: 'PipeFixInspectReportOther',
               component: PipeFixInspectReportOther,
               meta: {
                 title: '巡检上报'

@@ -650,9 +650,11 @@ export default {
       }
     }
     .inspectorNameWrap {
+      position: relative;
+      z-index: 1;
       .nameItem {
-        position: absolute;
-        z-index: 9;
+        position: fixed;
+        z-index: 1;
         background-color: white;
         padding: 5px 10px;
         border-radius: 4px;

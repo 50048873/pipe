@@ -4,7 +4,7 @@
       <div class="item-group line-bottom line-top">
         <h6>施工管线</h6>
         <div class="btnWrap">
-          <a class="btn btn-mini color-theme extend-click" @click="markPolygon">标面</a>
+          <a class="btn btn-mini color-theme extend-click" @click="markPolyline">标线</a>
         </div>
       </div>
       <div class="item-group line-bottom">
@@ -67,10 +67,10 @@
 import {getServerErrorMessageAsHtml, getUuid} from 'hui/lib/util.js'
 import * as api from '@/assets/js/api'
 import {success} from '@/assets/js/config'
-import {androidInputBugFixEvent} from '@/assets/js/mixin'
+import {androidInputBugFixEvent, getSubmitBtnClass} from '@/assets/js/mixin'
 import moment from 'moment'
 export default {
-  mixins: [androidInputBugFixEvent],
+  mixins: [androidInputBugFixEvent, getSubmitBtnClass],
   data () {
     return {
       params: {
@@ -87,20 +87,23 @@ export default {
       mapIsVisibled: false
     }
   },
-  computed: {
-    getSubmitBtnClass () {
-      return this.disabled ? 'color-disabled' : 'color-theme'
-    }
-  },
   methods: {
-    markPolygon () {
-      // this.mapIsVisibled = true
-      this.$router.push('/pipeFix/pipeFixInspectReport/constructingProject/markPolygon')
+    markPolyline () {
+      this.$router.push({name: 'MarkPolyline', params: {areaName: this.params.areaname}})
     },
     fileChanged (files) {
       this.params.files = files
     },
     validate () {
+      let params = this.$route.params
+      this.areaId = params.areaId // uuid
+      if (!this.areaId) {
+        this.$message({
+          content: '请先点击标线按钮，然后在打开的页面中标线，并保存成功才能上报道路改造',
+          time: 10000
+        })
+        return false
+      }
       if (!this.params.areaname) {
         this.$message({
           content: '请输入工程名称'
@@ -138,7 +141,7 @@ export default {
 
       // 添加其它要传的参数
       params.append('type', '3') // 问题类型
-      params.append('areaId', getUuid(32, 16)) // 问题类型
+      params.append('areaId', this.areaId) // 问题类型
 
       this.params.files.forEach(function (item) {
         params.append('files', item)

@@ -4,6 +4,14 @@
       <div id="line-button" class="esri-widget-button esri-widget esri-interactive" title="Draw polyline">
         <span class="esri-icon-polyline"></span>
       </div>
+      <div id="draw-polygon" class="esri-widget-button esri-widget esri-interactive" title="Draw and measure polygon">
+        <span class="esri-icon-polygon"></span>
+      </div>
+    </div>
+
+    <div class="submitWrap">
+      <a class="btn color-theme" @click="del"><i class="hui-icon-bell"></i>删除</a>
+      <button class="btn color-theme" :class="getSubmitBtnClass" @click="save" :disabled="disabled"><i class="hui-icon-bell"></i>保存</button>
     </div>
   </div>
 </template>
@@ -13,30 +21,71 @@
 import * as esriLoader from 'esri-loader'
 import {options} from '@/assets/js/config'
 import {getTiandituMap} from '@/assets/js/util'
+import * as api from '@/assets/js/api'
+import {success} from '@/assets/js/config'
+import {getServerErrorMessageAsHtml, getUuid} from 'hui/lib/util.js'
+import {getSubmitBtnClass} from '@/assets/js/mixin'
 export default {
+  mixins: [getSubmitBtnClass],
   data () {
     return {
+      disabled: false
     }
   },
   methods: {
+    del () {
+      this.drawPolygonButton.click()
+    },
+    save () {
+      this.disabled = true
+      let planArea = JSON.stringify(this.graphic.geometry)
+      let params = {
+        areaCode: getUuid(32, 16),
+        areaName: this.areaName || '',
+        planArea: planArea,
+        areas: (this.areas / 1000).toString()
+      }
+      console.log(params)
+      api.addPlanArea(params)
+        .then((res) => {
+          if (typeof res === 'string') {
+            res = JSON.parse(res)
+          }
+          if (res.status === success) {
+            this.$message({
+              content: res.msg,
+              time: 400,
+              closed: () => {
+                this.$router.push({name: 'PipeFixInspectReportConstructingProject', params: {areaId: params.areaCode}})
+              }
+            })
+          } else {
+            this.$message({
+              content: res.msg
+            })
+            this.disabled = false
+          }
+        }, (err) => {
+          this.$message({content: getServerErrorMessageAsHtml(err, 'MarkPolygon.vue->save'), icon: 'hui-icon-warn'})
+          this.disabled = false
+        })
+    },
     async initPipeFixMap () {
       // 加载天地图
       var map = await getTiandituMap()
 
       esriLoader.loadModules([
-        'esri/config',
+        "esri/views/2d/draw/Draw",
         "esri/Map",
         "esri/views/MapView",
-        "esri/views/2d/draw/Draw",
         "esri/Graphic",
-        "esri/geometry/Polyline",
+        "esri/geometry/Polygon",
         "esri/geometry/geometryEngine",
 
         "dojo/domReady!"
-      ], options).then(async ([config, Map, MapView, Draw, Graphic, Polyline, geometryEngine]) => {
-        // config设置
-        config.request.proxyUrl = 'http://10.100.50.197:2282/Java/proxy.jsp'
-        config.request.corsEnabledServers.push('http://10.100.50.71:2282')
+      ], options).then(([Draw, Map, MapView, Graphic, Polygon, geometryEngine]) => {
+
+        var _this = this
 
         // 创建MapView
         var view = new MapView({
@@ -47,19 +96,7 @@ export default {
           map: map,
           center: [114.360694, 30.584929],
           // 1:scale的图
-          scale: 2000,
-          popup: {
-            dockEnabled: true,
-            dockOptions: {
-              // Disables the dock button from the popup
-              buttonEnabled: true,
-              // Ignore the default sizes that trigger responsive docking
-              breakpoint: {
-                width: 320
-              },
-              position: 'top-center'
-            }
-          }
+          scale: 2000
         })
 
         // 移除esri log
@@ -73,152 +110,132 @@ export default {
         // add the button for the draw tool
         view.ui.add("line-button", "top-left");
 
+        // add the button for the draw tool
+        view.ui.add("draw-polygon", "top-left");
+
         view.when(function(event) {
           var draw = new Draw({
             view: view
           });
 
-          // ********************
-          // draw polyline button
-          // ********************
-          var drawLineButton = document.getElementById("line-button");
-          drawLineButton.onclick = function() {
+          // *******************
+          // draw polygon button
+          // *******************
+          _this.drawPolygonButton = document.getElementById("draw-polygon");
+          _this.drawPolygonButton.addEventListener("click", function() {
             view.graphics.removeAll();
-            enableCreateLine(draw, view);
-          }
+            enableCreatePolygon(draw, view);
+          });
         });
 
-        function enableCreateLine(draw, view) {
-          // creates and returns an instance of PolyLineDrawAction
-          // can only draw a line by clicking on the map
-          var action = draw.create("polyline", {
-            mode: "click"
-          });
+        function enableCreatePolygon(draw, view) {
+          // create() will return a reference to an instance of PolygonDrawAction
+          var action = draw.create("polygon");
 
-          // focus the view to activate keyboard shortcuts for sketching
+          // focus the view to activate keyboard shortcuts for drawing polygons
           view.focus();
 
-          // listen to vertex-add event on the polyline draw action
-          action.on("vertex-add", updateVertices);
+          // listen to vertex-add event on the action
+          action.on("vertex-add", drawPolygon);
 
-          // listen to vertex-remove event on the polyline draw action
-          action.on("vertex-remove", updateVertices);
+          // listen to cursor-update event on the action
+          action.on("cursor-update", drawPolygon);
 
-          // listen to cursor-update event on the polyline draw action
-          action.on("cursor-update", createGraphic);
+          // listen to vertex-remove event on the action
+          action.on("vertex-remove", drawPolygon);
 
-          // listen to draw-complete event on the polyline draw action
-          action.on("draw-complete", updateVertices);
-
+          // *******************************************
+          // listen to draw-complete event on the action
+          // *******************************************
+          action.on("draw-complete", drawPolygon);
         }
 
-        // This function is called from the "vertex-add" and "vertex-remove"
-        // events. Checks if the last vertex is making the line intersect itself.
-        function updateVertices(event) {
-          // create a polyline from returned vertices
-          var result = createGraphic(event);
-
-          // if the last vertex is making the line intersects itself,
-          // prevent "vertex-add" or "vertex-remove" from firing
-          if (result.selfIntersects) {
-            event.preventDefault();
-          }
-        }
-
-        // create a new graphic presenting the polyline that is being drawn on the view
-        function createGraphic(event) {
+        // this function is called from the polygon draw action events
+        // to provide a visual feedback to users as they are drawing a polygon
+        function drawPolygon(event) {
           var vertices = event.vertices;
+
+          //remove existing graphic
           view.graphics.removeAll();
 
-          // a graphic representing the polyline that is being drawn
-          var graphic = new Graphic({
-            geometry: new Polyline({
-              paths: vertices,
-              spatialReference: view.spatialReference
-            }),
+          // create a new polygon
+          var polygon = createPolygon(vertices);
+
+          // create a new graphic representing the polygon, add it to the view
+          var graphic = createGraphic(polygon);
+
+          view.graphics.add(graphic);
+
+          _this.graphic = graphic
+
+          // calculate the area of the polygon
+          var area = geometryEngine.geodesicArea(polygon, "square-meters");
+          if (area < 0) {
+            // simplify the polygon if needed and calculate the area again
+            var simplifiedPolygon = geometryEngine.simplify(polygon);
+            if (simplifiedPolygon) {
+              area = geometryEngine.geodesicArea(simplifiedPolygon, "square-meters");
+            }
+          }
+          _this.areas = area
+          // start displaying the area of the polygon
+          labelAreas(polygon, area);
+        }
+
+        // create a polygon using the provided vertices
+        function createPolygon(vertices) {
+          return new Polygon({
+            rings: vertices,
+            spatialReference: view.spatialReference
+          });
+        }
+
+        // create a new graphic representing the polygon that is being drawn on the view
+        function createGraphic(polygon) {
+          let graphic = new Graphic({
+            geometry: polygon,
             symbol: {
-              type: "simple-line", // autocasts as new SimpleFillSymbol
-              color: [4, 90, 141],
-              width: 4,
-              cap: "round",
-              join: "round"
+              type: "simple-fill", // autocasts as SimpleFillSymbol
+              color: [178, 102, 234, 0.8],
+              style: "solid",
+              outline: { // autocasts as SimpleLineSymbol
+                color: [255, 255, 255],
+                width: 2
+              }
             }
           });
-
-          // check the polyline intersects itself.
-          var intersectingFeature = getIntersectingFeature(graphic.geometry);
-
-          // Add a new graphic for the intersecting segment.
-          if (intersectingFeature) {
-            view.graphics.addMany([graphic, intersectingFeature]);
-          }
-          // Just add the graphic representing the polyline if no intersection
-          else {
-            view.graphics.add(graphic);
-          }
-
-          // return the graphic and intersectingSegment
-          return {
-            graphic: graphic,
-            selfIntersects: intersectingFeature
-          }
+          return graphic;
         }
 
-        // function that checks if the line intersects itself
-        function isSelfIntersecting(polyline) {
-          if (polyline.paths[0].length < 3) {
-            return false
-          }
-          var line = polyline.clone();
-
-          //get the last segment from the polyline that is being drawn
-          var lastSegment = getLastSegment(polyline);
-          line.removePoint(0, line.paths[0].length - 1);
-
-          // returns true if the line intersects itself, false otherwise
-          return geometryEngine.crosses(lastSegment, line);
-        }
-
-        // Checks if the line intersects itself. If yes, changes the last
-        // segment's symbol giving a visual feedback to the user.
-        function getIntersectingFeature(polyline) {
-          if (isSelfIntersecting(polyline)) {
-            return new Graphic({
-              geometry: getLastSegment(polyline),
-              symbol: {
-                type: "simple-line", // autocasts as new SimpleLineSymbol
-                style: "short-dot",
-                width: 3.5,
-                color: "yellow"
-              }
-            });
-          }
-          return null;
-        }
-
-        // Get the last segment of the polyline that is being drawn
-        function getLastSegment(polyline) {
-          var line = polyline.clone();
-          var lastXYPoint = line.removePoint(0, line.paths[0].length - 1);
-          var existingLineFinalPoint = line.getPoint(0, line.paths[0].length -
-            1);
-
-          return new Polyline({
-            spatialReference: view.spatialReference,
-            hasZ: false,
-            paths: [
-              [
-                [existingLineFinalPoint.x, existingLineFinalPoint.y],
-                [lastXYPoint.x, lastXYPoint.y]
-              ]
-            ]
+        //Label polyon with its area
+        function labelAreas(geom, area) {
+          var graphic = new Graphic({
+            geometry: geom.centroid,
+            symbol: {
+              type: "text",
+              color: "black",
+              haloColor: "black",
+              haloSize: "1px",
+              text: area.toFixed(0) + "平方米",
+              font: { // autocast as Font
+                size: 12,
+                family: "sans-serif"
+              },
+              xoffset: '-20px'
+            }
           });
+          view.graphics.add(graphic);
         }
       })
     },
     initSingleDirectionParam () {
       this.view = null                  // 视图
       this.map = null                   // 地图
+      this.graphic = null               // 画的面
+      this.drawPolygonButton = null     // 画面按钮
+      this.areas = null                 // 面积
+      let params = this.$route.params
+      this.areaName = params.areaName
     }
   },
   created () {
@@ -232,6 +249,7 @@ export default {
 
 <style scoped lang="less">
   @import '../assets/less/variable.less';
+  @import '../assets/less/submitBtn.less';
   .markPolygon {
     position: fixed;
     z-index: 9;

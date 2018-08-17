@@ -43,6 +43,17 @@ export function addPorject (data) {
   })
 }
 
+// 巡检上报 -> 添加巡检区域（标面）
+export function addPlanArea (data) {
+  const url = baseUrl + '/pipe/InspectController/addPlanArea.do'
+  return $.ajax({
+    type: 'POST',
+    url: url,
+    data: JSON.stringify(data),
+    contentType: 'application/json'
+  })
+}
+
 // 获取签到点
 export function getSignPoint () {
   const url = '/static/signPoint.json'

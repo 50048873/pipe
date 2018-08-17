@@ -64,13 +64,13 @@
 </template>
 
 <script>
-import {getServerErrorMessageAsHtml, getUuid} from 'hui/lib/util.js'
+import {getServerErrorMessageAsHtml} from 'hui/lib/util.js'
 import * as api from '@/assets/js/api'
 import {success} from '@/assets/js/config'
-import {androidInputBugFixEvent} from '@/assets/js/mixin'
+import {androidInputBugFixEvent, getSubmitBtnClass} from '@/assets/js/mixin'
 import moment from 'moment'
 export default {
-  mixins: [androidInputBugFixEvent],
+  mixins: [androidInputBugFixEvent, getSubmitBtnClass],
   data () {
     return {
       params: {
@@ -83,24 +83,26 @@ export default {
         remark: '项目已封顶，正在进行外立面施工',
         files: []
       },
-      disabled: false,
-      mapIsVisibled: false
-    }
-  },
-  computed: {
-    getSubmitBtnClass () {
-      return this.disabled ? 'color-disabled' : 'color-theme'
+      disabled: false
     }
   },
   methods: {
     markPolygon () {
-      // this.mapIsVisibled = true
-      this.$router.push('/pipeFix/pipeFixInspectReport/constructingProject/markPolygon')
+      this.$router.push({name: 'MarkPolygon', params: {areaName: this.params.areaname}})
     },
     fileChanged (files) {
       this.params.files = files
     },
     validate () {
+      let params = this.$route.params
+      this.areaId = params.areaId // uuid
+      if (!this.areaId) {
+        this.$message({
+          content: '请先点击标面按钮，然后在打开的页面中标面，并保存成功才能上报在建工程',
+          time: 10000
+        })
+        return false
+      }
       if (!this.params.areaname) {
         this.$message({
           content: '请输入工程名称'
@@ -138,7 +140,7 @@ export default {
 
       // 添加其它要传的参数
       params.append('type', '2') // 问题类型
-      params.append('areaId', getUuid(32, 16)) // 问题类型
+      params.append('areaId', this.areaId) // uuid
 
       this.params.files.forEach(function (item) {
         params.append('files', item)
@@ -155,7 +157,6 @@ export default {
               time: 600,
               closed: () => {
                 this.$router.push('/pipeFix')
-                // this.$destroy()
               }
             })
           } else {

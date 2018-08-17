@@ -1,5 +1,6 @@
 import * as esriLoader from 'esri-loader'
 import {options} from '@/assets/js/config'
+
 export function getTiandituMap () {
   return esriLoader.loadModules([
     'esri/config',
@@ -75,4 +76,30 @@ export function getTiandituMap () {
     })
     return map
   })
+}
+
+export function labelLength (view, Graphic, point, length) {
+  var geom = {
+    type: 'point',
+    longitude: point[0],
+    latitude: point[1]
+  }
+  var graphic = new Graphic({
+    geometry: geom,
+    symbol: {
+      type: 'text',
+      color: 'red',
+      haloColor: 'black',
+      haloSize: '1px',
+      text: length.toFixed(0) + '米',
+      font: { // autocast as Font
+        size: 12,
+        family: 'sans-serif'
+      },
+      xoffset: '20px',
+      yoffset: '-20px'
+    }
+  })
+  view.graphics.add(graphic)
+  return graphic
 }

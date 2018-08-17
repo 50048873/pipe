@@ -92,3 +92,11 @@ export let _handleDecimalLength = {
     handleDecimalLength
   }
 }
+
+export let getSubmitBtnClass = {
+  computed: {
+    getSubmitBtnClass () {
+      return this.disabled ? 'color-disabled' : 'color-theme'
+    }
+  }
+}

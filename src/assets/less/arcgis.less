@@ -1,3 +1,5 @@
+@import './variable.less';
+
 .esri-view-width-xsmall .esri-popup--is-docked-top-center .esri-popup__main-container, .esri-view-width-xsmall .esri-popup--is-docked-bottom-center .esri-popup__main-container {
   left: 0;
 }
@@ -23,5 +25,12 @@
 
       }
     }
+  }
+}
+
+.esri-widget-button {
+  &:active, &:focus, &:hover {
+    background-color: @color-theme!important;
+    color: white!important;
   }
 }
