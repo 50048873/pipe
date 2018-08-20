@@ -75,6 +75,7 @@ export default {
     return {
       params: {
         areaId: getUuid(32, 16),
+        probStatus: '1',
         areaname: '骏业财富广场',
         buildTeam: '中建三局',
         commencementDate: '2016-05-20',

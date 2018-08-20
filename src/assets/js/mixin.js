@@ -100,3 +100,42 @@ export let getSubmitBtnClass = {
     }
   }
 }
+
+// 标记单个点
+export let markPoint = {
+  methods: {
+    markPoint ({coord, pointType = 'point', SymbolType = 'picture-marker', svg, width, height, attributes}) {
+      esriLoader.loadModules([
+        'esri/Graphic'
+      ], options).then(([Graphic]) => {
+        let longitude = coord.longitude
+        let latitude = coord.latitude
+
+        // First create a point geometry
+        var point = {
+          type: pointType, // autocasts as new Point()
+          longitude: longitude,
+          latitude: latitude
+        }
+
+        // Create a symbol for drawing the point
+        var markerSymbol = {
+          type: SymbolType, // autocasts as new PictureMarkerSymbol()
+          width: width,
+          height: height,
+          url: '/static/svg/' + svg
+        }
+
+        // Create a graphic and add the geometry and symbol to it
+        var pointGraphic = new Graphic({
+          geometry: point,
+          symbol: markerSymbol,
+          attributes: attributes || coord
+        })
+        // console.log(pointGraphic)
+        // Add the line graphic to the view's GraphicsLayer
+        this.view.graphics.add(pointGraphic)
+      })
+    }
+  }
+}

@@ -24,7 +24,7 @@
             <span>当前位置：</span>
           </div>
           <div class="content">
-            <span>固原市</span>
+            <span><input class="currentPlace" type="text" placeholder="请输入当前位置"></span>
             <em v-show="signInfo.distance">（距离最近签到点{{signInfo.distance | handleDecimalLength(0)}}米）</em>
           </div>
         </li>
@@ -53,7 +53,7 @@ import {options} from '@/assets/js/config'
 import {getTiandituMap} from '@/assets/js/util'
 import {mapGetters} from 'vuex'
 import moment from 'moment'
-import {calDistance, _handleDecimalLength} from '@/assets/js/mixin'
+import {calDistance, _handleDecimalLength, markPoint} from '@/assets/js/mixin'
 let signedData = [
   {
     datetime: '06-20 10:30',
@@ -179,7 +179,7 @@ export default {
       }
     }
   },
-  mixins: [calDistance, _handleDecimalLength],
+  mixins: [calDistance, _handleDecimalLength,markPoint],
   computed: {
     ...mapGetters(['signPoint']),
     getSignBtnStatusClass () {
@@ -337,57 +337,30 @@ export default {
 
         // 移除esri log
         view.ui._removeComponents(['attribution'])
+        //移除缩放图标
+        view.ui.remove("zoom")
 
         this.map = map
         this.view = view
 
         // 标记签到点
-        this.markMultiSignPoint(view, this.signPoint)
+        this.markMultiSignPoint(this.signPoint)
 
         // 标记自己的位置
         this.watchPosition()
       })
     },
-    markSingleSignPoint (view, longitude, latitude) {
-      esriLoader.loadModules([
-        "esri/Graphic"
-      ], options).then(([Graphic]) => {
-        // First create a point geometry
-        var point = {
-          type: "point",  // autocasts as new Point()
-          longitude: longitude,
-          latitude: latitude
-        }
-
-        // Create a symbol for drawing the point
-        var markerSymbol = {
-          type: "simple-marker",  // autocasts as new SimpleMarkerSymbol()
-          color: [255, 0, 0],
-          size: 16,
-          outline: {
-            width: 0,
-            color: [255, 255, 255, 0]
-          },
-          xoffset: 16,
-          yoffset: 16,
-          path: "M6.407,0h52.577c0,0,0.422,0,0.547,0.141c0.193,0.217,0.167,0.468,0.167,0.468v12.453h33.895V70.12H51.848V59.455H18.835V100H6.407V0z"
-        }
-        // Create a graphic and add the geometry and symbol to it
-        var pointGraphic = new Graphic({
-          geometry: point,
-          symbol: markerSymbol
-        })
-        // Add the line graphic to the view's GraphicsLayer
-        view.graphics.add(pointGraphic);
-      })
-    },
-    markMultiSignPoint (view, coords) {
-      let len = coords.length
+    markMultiSignPoint (coords) {
+      let len = coords && coords.length
       if (!len) return
       for (let i = 0; i < len; i++) {
-        let longitude = coords[i].longitude
-        let latitude = coords[i].latitude
-        this.markSingleSignPoint(view, longitude, latitude)
+        let coord = coords[i]
+        this.markPoint({
+          width: '26px',
+          height: '26px',
+          coord,
+          svg: 'flag.svg'
+        })
       }
     },
     initSingleDirectionParam () {
@@ -431,9 +404,14 @@ export default {
             vertical-align: -2px;
           }
           em {
+            display: block;
             color: @color-red;
             font-size: 12px;
             font-style: normal;
+            margin-top: @margin-small
+          }
+          .currentPlace {
+            width: 100%;
           }
         }
         &:first-child {
@@ -443,7 +421,7 @@ export default {
     }
     #view_pipeFixSign {
       width: 100%;
-      height: 350px;
+      height: 260px;
       background-color: white;
     }
     .signPhotoWrap {

@@ -6,7 +6,8 @@
     "address": "骏业财富大厦A座武汉市农村商业银行附近",
     "des": "消防栓滴水",
     "reportor": "胡工",
-    "status": "待处理"
+    "status": "待处理",
+    "isHiddenTrouble": true
   },
   {
     "longitude": 114.3592303185924,
@@ -15,6 +16,7 @@
     "address": "骏业财富大厦肯德鸡附近",
     "des": "消防栓滴水",
     "reportor": "胡工",
-    "status": "待处理"
+    "status": "待处理",
+    "isHiddenTrouble": true
   }
 ]

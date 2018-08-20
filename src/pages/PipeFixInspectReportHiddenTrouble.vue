@@ -69,6 +69,7 @@ export default {
   data () {
     return {
       params: {
+        probStatus: '1',
         place: '必胜客欢乐餐厅骏业餐厅', //
         probName: '消防栓漏水', //
         deviceCode: 'dc-00001', //

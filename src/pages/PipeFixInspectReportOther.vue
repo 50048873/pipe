@@ -38,6 +38,7 @@ export default {
   data () {
     return {
       params: {
+        probStatus: '1',
         place: '必胜客欢乐餐厅骏业餐厅',
         reportType: '消防栓漏水',
         descrip: '必胜客欢乐餐厅骏业餐厅附近有一处消防栓在滴水',

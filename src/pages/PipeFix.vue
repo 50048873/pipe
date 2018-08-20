@@ -76,7 +76,7 @@ import {getTiandituMap} from '@/assets/js/util'
 import {toKilometre, dateFormat} from '@/assets/js/mixin'
 import * as api from '@/assets/js/api'
 import {mapGetters, mapMutations} from 'vuex'
-import {calDistance} from '@/assets/js/mixin'
+import {calDistance, markPoint} from '@/assets/js/mixin'
 export default {
   data () {
     return {
@@ -91,7 +91,7 @@ export default {
       otherInspector: []
     }
   },
-  mixins: [toKilometre, dateFormat, calDistance],
+  mixins: [toKilometre, dateFormat, calDistance, markPoint],
   computed: {
     ...mapGetters(['currentInspectorId']),
     getInspectBtnTitle () {
@@ -391,6 +391,7 @@ export default {
               if (info && info.graphic && info.graphic.attributes) {
                 info = info.graphic.attributes
               }
+              if (!info.isHiddenTrouble) return
               this.view.popup.open({
                   // currentDockPosition: 'bottom-center',
                   dockEnabled: true,
@@ -431,39 +432,6 @@ export default {
               });
             })
         })
-    },
-    markPoint ({coord, pointType = 'point', SymbolType = 'picture-marker', svg, width, height, attributes}) {
-      esriLoader.loadModules([
-        "esri/Graphic"
-      ], options).then(([Graphic]) => {
-        let longitude = coord.longitude
-        let latitude = coord.latitude
-
-        // First create a point geometry
-        var point = {
-          type: pointType,  // autocasts as new Point()
-          longitude: longitude,
-          latitude: latitude
-        }
-
-        // Create a symbol for drawing the point
-        var markerSymbol = {
-          type: SymbolType,  // autocasts as new PictureMarkerSymbol()
-          width: width,
-          height: height,
-          url: '/static/svg/' + svg
-        }
-
-        // Create a graphic and add the geometry and symbol to it
-        var pointGraphic = new Graphic({
-          geometry: point,
-          symbol: markerSymbol,
-          attributes: attributes || coord
-        })
-        // console.log(pointGraphic)
-        // Add the line graphic to the view's GraphicsLayer
-        this.view.graphics.add(pointGraphic);
-      })
     },
     markMultiSignPoint (coords) {
       let len = coords && coords.length

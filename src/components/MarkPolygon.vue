@@ -1,9 +1,9 @@
 <template>
   <div class="page markPolygon">
     <div id="view_markPolygon" class="view_markPolygon">
-      <div id="line-button" class="esri-widget-button esri-widget esri-interactive" title="Draw polyline">
+      <!-- <div id="line-button" class="esri-widget-button esri-widget esri-interactive" title="Draw polyline">
         <span class="esri-icon-polyline"></span>
-      </div>
+      </div> -->
       <div id="draw-polygon" class="esri-widget-button esri-widget esri-interactive" title="Draw and measure polygon">
         <span class="esri-icon-polygon"></span>
       </div>
@@ -71,7 +71,7 @@ export default {
         this.view = view
 
         // add the button for the draw tool
-        view.ui.add("line-button", "top-left");
+        // view.ui.add("line-button", "top-left");
 
         // add the button for the draw tool
         view.ui.add("draw-polygon", "top-left");
