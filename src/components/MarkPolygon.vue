@@ -10,8 +10,8 @@
     </div>
 
     <div class="submitWrap">
-      <a class="btn color-theme" @click="del"><i class="hui-icon-bell"></i>删除</a>
-      <button class="btn color-theme" :class="getSubmitBtnClass" @click="save" :disabled="disabled"><i class="hui-icon-bell"></i>保存</button>
+      <button class="btn color-theme" @click="del"><i class="hui-icon-bell"></i>删除</button>
+      <button class="btn color-theme" @click="confirm"><i class="hui-icon-bell"></i>确定</button>
     </div>
   </div>
 </template>
@@ -21,54 +21,18 @@
 import * as esriLoader from 'esri-loader'
 import {options} from '@/assets/js/config'
 import {getTiandituMap} from '@/assets/js/util'
-import * as api from '@/assets/js/api'
-import {success} from '@/assets/js/config'
-import {getServerErrorMessageAsHtml, getUuid} from 'hui/lib/util.js'
-import {getSubmitBtnClass} from '@/assets/js/mixin'
 export default {
-  mixins: [getSubmitBtnClass],
-  data () {
-    return {
-      disabled: false
-    }
-  },
   methods: {
     del () {
       this.drawPolygonButton.click()
     },
-    save () {
-      this.disabled = true
+    confirm () {
       let planArea = JSON.stringify(this.graphic.geometry)
       let params = {
-        areaCode: getUuid(32, 16),
-        areaName: this.areaName || '',
         planArea: planArea,
         areas: (this.areas / 1000).toString()
       }
-      console.log(params)
-      api.addPlanArea(params)
-        .then((res) => {
-          if (typeof res === 'string') {
-            res = JSON.parse(res)
-          }
-          if (res.status === success) {
-            this.$message({
-              content: res.msg,
-              time: 400,
-              closed: () => {
-                this.$router.push({name: 'PipeFixInspectReportConstructingProject', params: {areaId: params.areaCode}})
-              }
-            })
-          } else {
-            this.$message({
-              content: res.msg
-            })
-            this.disabled = false
-          }
-        }, (err) => {
-          this.$message({content: getServerErrorMessageAsHtml(err, 'MarkPolygon.vue->save'), icon: 'hui-icon-warn'})
-          this.disabled = false
-        })
+      this.$router.push({name: 'PipeFixInspectReportConstructingProject', params: {polygonData: params}})
     },
     async initPipeFixMap () {
       // 加载天地图
@@ -84,7 +48,6 @@ export default {
 
         "dojo/domReady!"
       ], options).then(([Draw, Map, MapView, Graphic, Polygon, geometryEngine]) => {
-
         var _this = this
 
         // 创建MapView
@@ -234,8 +197,6 @@ export default {
       this.graphic = null               // 画的面
       this.drawPolygonButton = null     // 画面按钮
       this.areas = null                 // 面积
-      let params = this.$route.params
-      this.areaName = params.areaName
     }
   },
   created () {

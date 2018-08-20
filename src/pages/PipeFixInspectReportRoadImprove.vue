@@ -54,7 +54,7 @@
       <div class="huiUploaderWrap"><hui-uploader des="注：包括工程公示牌、施工平面图等内容" @fileChanged="fileChanged"></hui-uploader></div>
 
       <div class="submitWrap">
-        <button class="btn" :class="getSubmitBtnClass" @click.prevent="submit" :disabled="disabled">上报</button>
+        <button class="btn" :class="getSubmitBtnClass" @click.prevent="submitAll" :disabled="disabled">上报</button>
       </div>
     </form>
     <transition name="fade">
@@ -64,7 +64,7 @@
 </template>
 
 <script>
-import {getServerErrorMessageAsHtml} from 'hui/lib/util.js'
+import {getServerErrorMessageAsHtml, getUuid} from 'hui/lib/util.js'
 import * as api from '@/assets/js/api'
 import {success} from '@/assets/js/config'
 import {androidInputBugFixEvent, getSubmitBtnClass} from '@/assets/js/mixin'
@@ -74,6 +74,7 @@ export default {
   data () {
     return {
       params: {
+        areaId: getUuid(32, 16),
         areaname: '骏业财富广场',
         buildTeam: '中建三局',
         commencementDate: '2016-05-20',
@@ -83,8 +84,7 @@ export default {
         remark: '项目已封顶，正在进行外立面施工',
         files: []
       },
-      disabled: false,
-      mapIsVisibled: false
+      disabled: false
     }
   },
   methods: {
@@ -96,10 +96,10 @@ export default {
     },
     validate () {
       let params = this.$route.params
-      this.areaId = params.areaId // uuid
-      if (!this.areaId) {
+      this.polylineData = params.polylineData // uuid
+      if (!this.polylineData) {
         this.$message({
-          content: '请先点击标线按钮，然后在打开的页面中标线，并保存成功才能上报道路改造',
+          content: '请先点击标线按钮，然后在打开的页面中标线，标线完成后点击确定按钮',
           time: 10000
         })
         return false
@@ -130,9 +130,34 @@ export default {
       }
       return true
     },
+    saveMarkPolyline (params) {
+      params.areaId = this.params.areaId
+      api.addPlanArea(params)
+        .then((res) => {
+          if (typeof res === 'string') {
+            res = JSON.parse(res)
+          }
+          if (res.status === success) {
+            this.$message({
+              content: res.msg,
+              time: 400,
+              closed: () => {
+                this.$router.push({name: 'PipeFixInspectReportRoadImprove', params: {areaId: params.areaCode}})
+              }
+            })
+          } else {
+            this.$message({
+              content: res.msg
+            })
+            this.disabled = false
+          }
+          return success
+        }, (err) => {
+          this.$message({content: getServerErrorMessageAsHtml(err, 'MarkPolyline.vue->save'), icon: 'hui-icon-warn'})
+          this.disabled = false
+        })
+    },
     submit () {
-      if (!this.validate()) return
-      this.disabled = true
       let formEle = this.$refs.formEle
       let params = new FormData(formEle)
 
@@ -141,7 +166,7 @@ export default {
 
       // 添加其它要传的参数
       params.append('type', '3') // 问题类型
-      params.append('areaId', this.areaId) // 问题类型
+      params.append('areaId', this.params.areaId) // 问题类型
 
       this.params.files.forEach(function (item) {
         params.append('files', item)
@@ -158,7 +183,6 @@ export default {
               time: 600,
               closed: () => {
                 this.$router.push('/pipeFix')
-                // this.$destroy()
               }
             })
           } else {
@@ -171,6 +195,13 @@ export default {
           this.$message({content: getServerErrorMessageAsHtml(err, 'ReservoirDetailInspectionAdd.vue->submit'), icon: 'hui-icon-warn'})
           this.disabled = false
         })
+    },
+    submitAll () {
+      if (!this.validate()) return
+      this.disabled = true
+
+      this.saveMarkPolyline(this.polylineData)
+      this.submit()
     }
   }
 }

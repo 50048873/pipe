@@ -8,7 +8,7 @@
 
     <div class="submitWrap">
       <button class="btn color-theme" @click="del"><i class="hui-icon-bell"></i>删除</button>
-      <button class="btn color-theme" :class="getSubmitBtnClass" @click="save" :disabled="disabled"><i class="hui-icon-bell"></i>保存</button>
+      <button class="btn color-theme" @click="confirm"><i class="hui-icon-bell"></i>确定</button>
     </div>
   </div>
 </template>
@@ -18,61 +18,24 @@
 import * as esriLoader from 'esri-loader'
 import {options} from '@/assets/js/config'
 import {getTiandituMap, labelLength} from '@/assets/js/util'
-import * as api from '@/assets/js/api'
-import {success} from '@/assets/js/config'
-import {getServerErrorMessageAsHtml, getUuid} from 'hui/lib/util.js'
-import {getSubmitBtnClass} from '@/assets/js/mixin'
 export default {
-  mixins: [getSubmitBtnClass],
-  data () {
-    return {
-      disabled: false
-    }
-  },
   methods: {
     del () {
       this.drawLineButton.click()
     },
-    save () {
-      this.disabled = true
+    confirm () {
       let planArea = JSON.stringify(this.graphic.geometry)
       let params = {
-        areaCode: getUuid(32, 16),
-        areaName: this.areaName || '',
         planArea: planArea,
         areas: (this.lineLength / 1000).toString()
       }
-      console.log(params)
-      api.addPlanArea(params)
-        .then((res) => {
-          if (typeof res === 'string') {
-            res = JSON.parse(res)
-          }
-          if (res.status === success) {
-            this.$message({
-              content: res.msg,
-              time: 400,
-              closed: () => {
-                this.$router.push({name: 'PipeFixInspectReportRoadImprove', params: {areaId: params.areaCode}})
-              }
-            })
-          } else {
-            this.$message({
-              content: res.msg
-            })
-            this.disabled = false
-          }
-        }, (err) => {
-          this.$message({content: getServerErrorMessageAsHtml(err, 'MarkPolygon.vue->save'), icon: 'hui-icon-warn'})
-          this.disabled = false
-        })
+      this.$router.push({name: 'PipeFixInspectReportRoadImprove', params: {polylineData: params}})
     },
     async initPipeFixMap () {
       // 加载天地图
       var map = await getTiandituMap()
 
       esriLoader.loadModules([
-        'esri/config',
         "esri/Map",
         "esri/views/MapView",
         "esri/views/2d/draw/Draw",
@@ -81,11 +44,7 @@ export default {
         "esri/geometry/geometryEngine",
 
         "dojo/domReady!"
-      ], options).then(async ([config, Map, MapView, Draw, Graphic, Polyline, geometryEngine]) => {
-        // config设置
-        config.request.proxyUrl = 'http://10.100.50.197:2282/Java/proxy.jsp'
-        config.request.corsEnabledServers.push('http://10.100.50.71:2282')
-
+      ], options).then(async ([Map, MapView, Draw, Graphic, Polyline, geometryEngine]) => {
         var _this = this
 
         // 创建MapView
@@ -263,16 +222,12 @@ export default {
         }
       })
     },
-    // registerPolyline () {
-    // },
     initSingleDirectionParam () {
       this.view = null                  // 视图
       this.map = null                   // 地图
       this.graphic = null               // 画的线
       this.drawLineButton = null        // 画面按钮
       this.lineLength = null            // 线长
-      let params = this.$route.params
-      this.areaName = params.areaName
     }
   },
   created () {
