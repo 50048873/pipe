@@ -64,7 +64,7 @@
 </template>
 
 <script>
-import {getServerErrorMessageAsHtml, getUuid} from 'hui/lib/util.js'
+import {getServerErrorMessageAsHtml} from 'hui/lib/util.js'
 import * as api from '@/assets/js/api'
 import {success} from '@/assets/js/config'
 import {androidInputBugFixEvent, getSubmitBtnClass} from '@/assets/js/mixin'
