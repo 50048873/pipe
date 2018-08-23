@@ -19,6 +19,13 @@ module.exports = {
           '^/api': '/'
         }
       },
+      '/filepath': {
+        target: "http://www.whdse.cn:56015",
+        changeOrigin: true,
+        pathRewrite: {
+          '^/filepath': '/'
+        }
+      },
       "/arcgis_js_api/": {
         target: "http://10.100.3.213:8096",
         changeOrigin: true

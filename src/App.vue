@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-   <!--  <iframe v-if="baseUrl === '/api'" src="http://www.whdse.cn:56015/cas-server/login?service=http://www.whdse.cn:56015/znb/index.html" frameborder="0"></iframe> -->
+    <!-- <iframe v-if="baseUrl === '/api'" src="http://www.whdse.cn:56015/cas-server/login?service=http://www.whdse.cn:56015/znb/index.html" frameborder="0"></iframe> -->
     <hui-routerview-slide></hui-routerview-slide>
     <hui-nav3 :data="nav3Data" v-show="isVisible"></hui-nav3>
   </div>
@@ -65,7 +65,7 @@ export default {
     }
   },
   created () {
-    // this.getFilePathUrl()
+    this.getFilePathUrl()
     this.baseUrl = process.env.API_HOST
   },
   watch: {

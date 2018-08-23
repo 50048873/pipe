@@ -1,6 +1,6 @@
 <template>
   <div class="page pipeFixSign">
-    <section class="startSignWrap" v-if="currentIndex === 0">
+    <form class="form" v-if="currentIndex === 0">
       <ul class="line-bottom signInfo">
         <li>
           <div class="title">
@@ -24,7 +24,7 @@
             <span>当前位置：</span>
           </div>
           <div class="content">
-            <span><input class="currentPlace" type="text" placeholder="请输入当前位置"></span>
+            <span><input ref="currentPlace" class="currentPlace" type="text" placeholder="请输入当前位置" required v-model="signInfo.currentAddress"></span>
             <em v-show="signInfo.distance">（距离最近签到点{{signInfo.distance | handleDecimalLength(0)}}米）</em>
           </div>
         </li>
@@ -33,12 +33,12 @@
         <div id="view_pipeFixSign"></div>
       </div>
       <div class="signPhotoWrap">
-        <hui-uploader title="签到照片"></hui-uploader>
+        <hui-uploader title="签到照片" @fileChanged="fileChanged"></hui-uploader>
       </div>
-      <div class="signBtnWrap">
-        <a class="btn" :class="getSignBtnStatusClass" @click="sign">签到</a>
+      <div class="submitWrap">
+        <button class="btn" :class="getSignBtnStatusClass" @click.prevent="sign" :disabled="disabled">签到</button>
       </div>
-    </section>
+    </form>
     <list3 :data="signedData" v-if="currentIndex === 1"></list3>
     <tabs @tabChange="tabChange"></tabs>
   </div>
@@ -54,6 +54,9 @@ import {getTiandituMap} from '@/assets/js/util'
 import {mapGetters} from 'vuex'
 import moment from 'moment'
 import {calDistance, _handleDecimalLength, markPoint} from '@/assets/js/mixin'
+import {getServerErrorMessageAsHtml, getUuid} from 'hui/lib/util.js'
+import * as api from '@/assets/js/api'
+import {success} from '@/assets/js/config'
 let signedData = [
   {
     datetime: '06-20 10:30',
@@ -174,9 +177,11 @@ export default {
       signInfo: {
         time: moment().format('YYYY-MM-DD'),
         address: '',
-        currentAddress: '',
-        distance: null
-      }
+        currentAddress: ' 测试位置01',
+        distance: null,
+        files: []
+      },
+      disabled: false
     }
   },
   mixins: [calDistance, _handleDecimalLength,markPoint],
@@ -187,17 +192,60 @@ export default {
     }
   },
   methods: {
+    fileChanged (files) {
+      this.signInfo.files = files
+    },
+    validate () {
+      if (!this.signInfo.currentAddress) {
+        this.$message({
+          content: '请输入当前位置'
+        })
+        this.$refs.currentPlace.focus()
+        return false
+      }
+      return true
+    },
     sign () {
       if (this.signInfo.distance <= 50) {
         this.signInfo.time = moment().format('YYYY-MM-DD HH:mm'),
-        this.$message({
-         content: '签到成功！'
-        })
+        this.addSign()
       } else {
         this.$message({
          content: '50米范围内才能签到（含50米）！'
         })
       }
+    },
+    addSign () {
+      if (!this.validate()) return
+      this.disabled = true
+
+      let params = new FormData()
+
+      params.append('pointCode', this.signInfo.address)
+      params.append('addrNow', this.signInfo.addrNow)
+
+      this.signInfo.files.forEach(function (item) {
+        params.append('files', item)
+      })
+      return api.addSign(params)
+        .then((res) => {
+          if (typeof res === 'string') {
+            res = JSON.parse(res)
+          }
+          if (res.status === success) {
+            console.log(res)
+            this.$message({
+              content: res.msg,
+              time: 400
+            })
+          } else {
+            this.$message({
+              content: res.msg
+            })
+          }
+        }, (err) => {
+          this.$message({content: getServerErrorMessageAsHtml(err, 'PipeFixSign.vue->save'), icon: 'hui-icon-warn'})
+        })
     },
     tabChange (index) {
       this.currentIndex = index
@@ -384,6 +432,9 @@ export default {
   .pipeFixSign {
     z-index: 9;
     padding-bottom: 40px;
+    .form {
+      padding-top: 5px;
+    }
     .signInfo {
       margin-bottom: @margin-small;
       background-color: white;

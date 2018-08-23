@@ -78,8 +78,8 @@ export default {
         probStatus: '1',
         areaname: '骏业财富广场',
         buildTeam: '中建三局',
-        commencementDate: '2016-05-20',
-        completionDate: '2018-09-30',
+        commencementDate: '2017-07-21',
+        completionDate: moment().format('YYYY-MM-DD'),
         linkman: '胡工',
         phone: '13800000000',
         remark: '项目已封顶，正在进行外立面施工',
@@ -167,6 +167,7 @@ export default {
 
       // 添加其它要传的参数
       params.append('type', '2') // 问题类型
+      params.append('reportType', '巡检上报') // 问题类型
       params.append('areaId', this.params.areaId) // uuid
 
       this.params.files.forEach(function (item) {

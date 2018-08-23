@@ -1,64 +1,200 @@
 <template>
-  <div class="page page-hasFooter message">
+  <div class="page message">
     <div class="searchWrap">
-      <hui-search backgroundColor="#dcdcdc"></hui-search>
+      <hui-search backgroundColor="#dcdcdc" @search-change="searchChange" time="600"></hui-search>
     </div>
     <div class="dateWrap">
       <span>{{date}}</span>
       <span>
         <label for="date">
-          <i class="hui-icon-calendar"></i>
-          <input id="date" type="date" v-model="date" />
+          <!-- <i class="hui-icon-calendar"></i> -->
+          <input id="date" type="date" v-model="date" @change="getInspectData" />
         </label>
       </span>
     </div>
     <ul>
       <li
         class="line-top line-bottom"
-        v-for="(item, index) in data"
-        :key="index"
-        @click="goDetail(item.id)"
+        v-for="item in hiddenAndOtherData"
+        :key="item.id"
+        @click="goDetail(item.id, 'hiddenAndOtherData')"
       >
         <div class="iconWrap">
-          <i class="hui-icon-bell"></i>
+          <i :class="getIconClass(item.probType)"></i>
         </div>
         <div class="titleWrap">
           <h6>
-            <span class="title">{{item.title}}</span>
-            <span class="urgent color-red"><i>紧急</i></span>
+            <span class="title">{{getTypeTxt(item.probType)}}</span>
+            <span class="urgent" :class="getProbStatusClass(item.probStatus)"><i>{{getStatusTxt(item.probStatus)}}</i></span>
           </h6>
-          <p>{{item.des}}</p>
+          <p v-if="item.probType == 1">{{item.probName}}</p>
+          <p v-else-if="item.probType == 4">{{item.place}}</p>
+        </div>
+        <div class="arrow-r"></div>
+      </li>
+      <li
+        class="line-top line-bottom"
+        v-for="item in buildAndRoadData"
+        :key="item.id"
+        @click="goDetail(item.id, 'buildAndRoadData')"
+      >
+        <div class="iconWrap">
+          <i :class="getIconClass(item.probType)"></i>
+        </div>
+        <div class="titleWrap">
+          <h6>
+            <span class="title">{{getTypeTxt(item.probType)}}</span>
+            <span class="urgent" :class="getProbStatusClass(item.probStatus)"><i>{{getStatusTxt(item.probStatus)}}</i></span>
+          </h6>
+          <p>{{item.areaName}}</p>
         </div>
         <div class="arrow-r"></div>
       </li>
     </ul>
+    <hui-nodata v-show="!hiddenAndOtherData.length && !buildAndRoadData.length"></hui-nodata>
   </div>
 </template>
 
 <script>
 import moment from 'moment'
-let data = [
-  {
-    id: 0,
-    title: '标题',
-    des: '描叙',
-    status: 0,
-    type: 0
-  }
-]
+import {getServerErrorMessageAsHtml} from 'hui/lib/util.js'
+import * as api from '@/assets/js/api'
+import {success} from '@/assets/js/config'
+
 export default {
   data () {
     return {
       date: moment().format('YYYY-MM-DD'),
-      data: data
+      name: '',
+      hiddenAndOtherData: [],
+      buildAndRoadData: []
     }
   },
   methods: {
-    goDetail (id) {
+    getTypeTxt (probType) {
+      let res
+      switch (probType) {
+        case '1':
+          res = '隐患'
+          break
+        case '2':
+          res = '在建工程'
+          break
+        case '3':
+          res = '道路改造'
+          break
+        case '4':
+          res = '其他'
+          break
+      }
+      return res
+    },
+    getIconClass (probLevel) {
+      let res
+      switch (probLevel) {
+        case '1':
+          res = 'hui-icon-bell'
+          break
+        case '4':
+          res = 'hui-icon-bell'
+          break
+        case '2':
+          res = 'hui-icon-clock'
+          break
+        case '3':
+          res = 'hui-icon-clock'
+          break
+        default:
+          res = 'hui-icon-bell'
+      }
+      return res
+    },
+    getProbStatusClass (probLevel) {
+      let res
+      switch (probLevel) {
+        case '0':
+          res = 'color-probStatus-1'
+          break
+        case '1':
+          res = 'color-probStatus-2'
+          break
+        case '2':
+          res = 'color-probStatus-3'
+          break
+        case '3':
+          res = 'color-probStatus-4'
+          break
+        case '4':
+          res = 'color-probStatus-5'
+          break
+        default:
+          res = 'color-probStatus-1'
+      }
+      return res
+    },
+    getStatusTxt (probLevel) {
+      let res
+      switch (probLevel) {
+        case '0':
+          res = '未核实'
+          break
+        case '1':
+          res = '已核实'
+          break
+        case '2':
+          res = '已派单'
+          break
+        case '3':
+          res = '处理中'
+          break
+        case '4':
+          res = '已处理'
+          break
+        default:
+          res = '未核实'
+      }
+      return res
+    },
+    goDetail (id, resource) {
       let from = this.$route.path
       let to = `${from}/${id}`
-      this.$router.push({path: to})
+      this.$router.push({path: to, query: {resource: resource}})
+    },
+    searchChange (newVal) {
+      this.name = newVal
+      this.getInspectData()
+    },
+    getInspectData () {
+      let params = {
+        time: this.date,
+        name: this.name
+      }
+      return api.getInspectData(params)
+        .then((res) => {
+          if (typeof res === 'string') {
+            res = JSON.parse(res)
+          }
+          if (res.status === success) {
+            let data = res.data
+            this.hiddenAndOtherData = data && data.hiddenAndOtherData
+            this.buildAndRoadData = data && data.buildAndRoadData
+            // console.log(this.hiddenAndOtherData, this.buildAndRoadData)
+            // this.$message({
+            //   content: res.msg,
+            //   time: 400
+            // })
+          } else {
+            this.$message({
+              content: res.msg
+            })
+          }
+        }, (err) => {
+          this.$message({content: getServerErrorMessageAsHtml(err, 'ProblemList.vue->save'), icon: 'hui-icon-warn'})
+        })
     }
+  },
+  created () {
+    this.getInspectData()
   }
 }
 </script>
@@ -81,9 +217,9 @@ export default {
         color: @color-theme;
         transform: translateY(-50%);
       }
-      input {
-        visibility: hidden;
-      }
+      // input {
+      //   visibility: hidden;
+      // }
     }
     ul {
       li {

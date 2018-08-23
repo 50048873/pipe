@@ -4,7 +4,7 @@ import {baseUrl} from '@/assets/js/config'
 /* 项目通用接口 */
 // 获取文件请求url地址
 export function getFilePathUrl () {
-  const url = baseUrl + '/znb/CommonCtrl/getFilePathUrl.do'
+  const url = 'filepath' + '/znb/CommonCtrl/getFilePathUrl.do'
   return $.ajax({
     type: 'GET',
     url: url
@@ -51,6 +51,33 @@ export function addPlanArea (data) {
     url: url,
     data: JSON.stringify(data),
     contentType: 'application/json'
+  })
+}
+
+// 巡检工作 -> 巡检工作查询（巡检工作查询如果只传ID就是查询详情）
+export function getInspectData (data) {
+  const url = baseUrl + '/pipe/InspectController/getInspectData.do'
+  return $.ajax({
+    type: 'POST',
+    url: url,
+    data: JSON.stringify(data),
+    contentType: 'application/json'
+  })
+}
+
+// 巡检签到
+export function addSign (data) {
+  data.forEach((item, key) => {
+    console.log(key, ': ', item)
+  })
+  const url = baseUrl + '/pipe/SignController/addSign.do'
+  return $.ajax({
+    type: 'POST',
+    contentType: false,
+    processData: false,
+    cache: false,
+    url: url,
+    data: data
   })
 }
 

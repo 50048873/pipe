@@ -2,41 +2,46 @@
   <div class="line-top line-bottom">
     <ul class="photos clearfix">
       <li v-for="(item, index) in photos" :key="index">
-        <span class="photoWrap" :style="getBg(item.url)"></span>
+        <span class="photoWrap" :style="getBg(item.fileCompress)"></span>
       </li>
     </ul>
   </div>
 </template>
 
 <script>
-let photos = [
-  {
-    url: '/static/img/example-1.jpg'
-  },
-  {
-    url: '/static/img/example-1.jpg'
-  },
-  {
-    url: '/static/img/example-1.jpg'
-  },
-  {
-    url: '/static/img/example-1.jpg'
-  },
-  {
-    url: '/static/img/example-1.jpg'
-  }
-]
+import {getItem} from '@/assets/js/session'
+// let photos = [
+//   {
+//     fileCompress: '/static/img/example-1.jpg'
+//   },
+//   {
+//     fileCompress: '/static/img/example-1.jpg'
+//   },
+//   {
+//     fileCompress: '/static/img/example-1.jpg'
+//   },
+//   {
+//     fileCompress: '/static/img/example-1.jpg'
+//   },
+//   {
+//     fileCompress: '/static/img/example-1.jpg'
+//   }
+// ]
 export default {
   props: {
     photos: {
       type: Array,
       default: () => {
-        return photos
+        return []
       }
     }
   },
   methods: {
-    getBg (url) {
+    getBg (fileCompress) {
+      let filePathUrl = 'http://10.100.50.76:8280/upload' || getItem('filePathUrl')
+      fileCompress = fileCompress.replace('\\', '/')
+      let url = filePathUrl + '/' + fileCompress
+      // console.log(url)
       return {
         backgroundImage: `url(${url})`
       }

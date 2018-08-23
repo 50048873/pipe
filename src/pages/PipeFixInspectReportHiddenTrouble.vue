@@ -11,7 +11,7 @@
       <div class="item-group line-bottom">
         <h6>隐患名称<span class="required color-red">*</span></h6>
         <div>
-          <input type="text" name="probName" placeholder="请输入隐患名称" required v-model="params.probName">
+          <input type="text" name="probName" placeholder="请输入隐患名称（例：临河大道管线爆管）" required v-model="params.probName">
         </div>
       </div>
       <div class="item-group line-bottom">
@@ -140,6 +140,7 @@ export default {
       let params = new FormData(formEle)
       // 添加其它要传的参数
       params.append('probType', '1') // 问题类型
+      params.append('reportType', '巡检上报') // 问题类型
       let coord = this.inspectedPathInfo.slice().pop()
       if (coord) {
         params.append('lgtd', coord.longitude) // 经度

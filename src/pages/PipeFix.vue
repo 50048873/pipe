@@ -63,7 +63,7 @@
       </a>
     </div>
     <transition name="fade">
-      <router-view class="router-view"></router-view>
+      <router-view class="router-view" @checked="checked"></router-view>
     </transition>
   </div>
 </template>
@@ -88,7 +88,8 @@ export default {
         distance: 0
       },
       addHiddenTroubleAndSignBtn: false,
-      otherInspector: []
+      otherInspector: [],
+      checkedTask: []
     }
   },
   mixins: [toKilometre, dateFormat, calDistance, markPoint],
@@ -100,6 +101,9 @@ export default {
   },
   methods: {
     ...mapMutations(['set_signPoint', 'set_inspectedPathInfo']),
+    checked (checkedTask) {
+      this.checkedTask = checkedTask
+    },
     getNameItemStyle (item) {
       return {
         top: item.y + 'px',
@@ -107,6 +111,25 @@ export default {
       }
     },
     startInspect () {
+      if (!this.checkedTask.length) {
+        this.$router.push({name: 'PipeFixInspectTask'})
+        return
+      }
+
+      // if (!this.firstClickStartInspect) {
+      //   this.firstClickStartInspect = true
+      //   this.$router.push({name: 'PipeFixInspectTask'})
+      // } else if (!this.checkedTask.length) {
+      //   this.$message({
+      //     content: '请先选择巡检任务',
+      //     time: 1000,
+      //     closed: () => {
+      //       this.$router.push({name: 'PipeFixInspectTask'})
+      //     }
+      //   })
+      //   return
+      // }
+
       this.inspecting = !this.inspecting
 
       this.addHiddenTroubleAndSignBtn = true
@@ -522,6 +545,7 @@ export default {
         // [114.360809, 30.585959]
       ]
       this.firstLoadName = false
+      // this.firstClickStartInspect = false // 是否第一次点开始巡检
     }
   },
   created () {

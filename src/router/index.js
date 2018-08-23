@@ -12,6 +12,7 @@ import PipeFixInspectReportConstructingProject from '@/pages/PipeFixInspectRepor
 import PipeFixInspectReportRoadImprove from '@/pages/PipeFixInspectReportRoadImprove'                           // 首页 -> 巡检抢修 -> 巡检上报 -> 道路改造
 import PipeFixInspectReportOther from '@/pages/PipeFixInspectReportOther'                                       // 首页 -> 巡检抢修 -> 巡检上报 -> 其他
 import PipeFixSign from '@/pages/PipeFixSign'                                                                   // 首页 -> 巡检抢修 -> 巡检签到
+import PipeFixInspectTask from '@/pages/PipeFixInspectTask'                                                     // 首页 -> 巡检抢修 -> 巡检签到
 import PipeAnalyze from '@/pages/PipeAnalyze'                                                                   // 首页 -> 统计分析
 
 import Message from '@/pages/Message'                                                                           // 消息
@@ -135,6 +136,14 @@ let routes = new Router({
             title: '巡检签到'
           }
         },
+        {
+          path: '/pipeFix/pipeFixInspectTask',
+          name: 'PipeFixInspectTask',
+          component: PipeFixInspectTask,
+          meta: {
+            title: '巡检任务选择'
+          }
+        }
       ]
     },
     {
@@ -151,7 +160,7 @@ let routes = new Router({
       component: ProblemDetail,
       props: true,
       meta: {
-        title: '巡检签到'
+        title: '上报详情'
       }
     },
     {
