@@ -157,13 +157,15 @@
     </div>
     <h3 v-if="data.file && data.file.length">现场照片</h3>
     <photo :photos="data.file" v-if="data.file && data.file.length"></photo>
-    <display-polygon></display-polygon>
+    <display-polygon v-if="data.probType == 2"></display-polygon>
+    <display-polyline v-if="data.probType == 3"></display-polyline>
   </div>
 </template>
 
 <script>
 import Photo from '@/components/Photo'
 import DisplayPolygon from '@/components/DisplayPolygon'
+import DisplayPolyline from '@/components/DisplayPolyline'
 import {getServerErrorMessageAsHtml} from 'hui/lib/util.js'
 import * as api from '@/assets/js/api'
 import {success} from '@/assets/js/config'
@@ -176,7 +178,8 @@ export default {
   },
   components: {
     Photo,
-    DisplayPolygon
+    DisplayPolygon,
+    DisplayPolyline
   },
   data () {
     return {

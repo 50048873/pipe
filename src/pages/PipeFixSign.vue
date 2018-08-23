@@ -221,7 +221,7 @@ export default {
       let params = new FormData()
 
       params.append('pointCode', this.signInfo.address)
-      params.append('addrNow', this.signInfo.addrNow)
+      params.append('addrNow', this.signInfo.currentAddress)
 
       this.signInfo.files.forEach(function (item) {
         params.append('files', item)
