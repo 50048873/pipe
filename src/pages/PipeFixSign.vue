@@ -45,18 +45,17 @@
 </template>
 
 <script>
-/* eslint-disable */
 import Tabs from '@/components/Tabs'
 import List3 from '@/components/List3'
 import * as esriLoader from 'esri-loader'
-import {options} from '@/assets/js/config'
+import {options, success} from '@/assets/js/config'
 import {getTiandituMap} from '@/assets/js/util'
 import {mapGetters} from 'vuex'
 import moment from 'moment'
 import {calDistance, _handleDecimalLength, markPoint} from '@/assets/js/mixin'
-import {getServerErrorMessageAsHtml, getUuid} from 'hui/lib/util.js'
+import {getServerErrorMessageAsHtml} from 'hui/lib/util.js'
 import * as api from '@/assets/js/api'
-import {success} from '@/assets/js/config'
+
 let signedData = [
   {
     datetime: '06-20 10:30',
@@ -184,7 +183,7 @@ export default {
       disabled: false
     }
   },
-  mixins: [calDistance, _handleDecimalLength,markPoint],
+  mixins: [calDistance, _handleDecimalLength, markPoint],
   computed: {
     ...mapGetters(['signPoint']),
     getSignBtnStatusClass () {
@@ -207,11 +206,11 @@ export default {
     },
     sign () {
       if (this.signInfo.distance <= 50) {
-        this.signInfo.time = moment().format('YYYY-MM-DD HH:mm'),
+        this.signInfo.time = moment().format('YYYY-MM-DD HH:mm')
         this.addSign()
       } else {
         this.$message({
-         content: '50米范围内才能签到（含50米）！'
+          content: '50米范围内才能签到（含50米）！'
         })
       }
     },
@@ -255,14 +254,14 @@ export default {
     },
     markSingleInspector (view, coord) {
       esriLoader.loadModules([
-        "esri/Graphic"
+        'esri/Graphic'
       ], options).then(([Graphic]) => {
         let longitude = coord.longitude
         let latitude = coord.latitude
 
         // First create a point geometry
         var point = {
-          type: "point",  // autocasts as new Point()
+          type: 'point', // autocasts as new Point()
           longitude: longitude,
           latitude: latitude
         }
@@ -271,14 +270,14 @@ export default {
 
         // Create a symbol for drawing the point
         var markerSymbol = {
-          type: "simple-marker",  // autocasts as new SimpleMarkerSymbol()
+          type: 'simple-marker', // autocasts as new SimpleMarkerSymbol()
           color: color,
           size: 22,
           outline: {
             width: 0,
             color: [255, 255, 255, 0]
           },
-          path: "M57.083,57.722v2.344c4.87,0.671,8.251,2.122,8.251,3.81c0,2.324-6.398,4.208-14.292,4.208v-3.601h2.967V51.455h4.063V40.62  c-0.791-1.182-3.344-1.161-3.344-1.161h-2.436v-0.569c1.51-0.521,2.601-1.938,2.601-3.625c0-2.126-1.724-3.85-3.851-3.85  s-3.851,1.724-3.851,3.85c0,1.687,1.091,3.104,2.601,3.625v0.569h-2.313c-2.711,0-3.468,1.161-3.468,1.161v10.964h3.935v12.898  h3.095v3.601c-7.893,0-14.292-1.884-14.292-4.208c0-1.688,3.381-3.139,8.25-3.81v-2.344c-8.068,0.834-13.917,3.292-13.917,6.195  c0,3.59,8.936,6.5,19.958,6.5c11.022,0,19.958-2.91,19.958-6.5C71,61.014,65.151,58.556,57.083,57.722z"
+          path: 'M57.083,57.722v2.344c4.87,0.671,8.251,2.122,8.251,3.81c0,2.324-6.398,4.208-14.292,4.208v-3.601h2.967V51.455h4.063V40.62  c-0.791-1.182-3.344-1.161-3.344-1.161h-2.436v-0.569c1.51-0.521,2.601-1.938,2.601-3.625c0-2.126-1.724-3.85-3.851-3.85  s-3.851,1.724-3.851,3.85c0,1.687,1.091,3.104,2.601,3.625v0.569h-2.313c-2.711,0-3.468,1.161-3.468,1.161v10.964h3.935v12.898  h3.095v3.601c-7.893,0-14.292-1.884-14.292-4.208c0-1.688,3.381-3.139,8.25-3.81v-2.344c-8.068,0.834-13.917,3.292-13.917,6.195  c0,3.59,8.936,6.5,19.958,6.5c11.022,0,19.958-2.91,19.958-6.5C71,61.014,65.151,58.556,57.083,57.722z'
         }
 
         // Create a graphic and add the geometry and symbol to it
@@ -289,7 +288,7 @@ export default {
         })
         // console.log(pointGraphic)
         // Add the line graphic to the view's GraphicsLayer
-        view.graphics.add(pointGraphic);
+        view.graphics.add(pointGraphic)
       })
     },
     async handlePosition (position) {
@@ -385,8 +384,8 @@ export default {
 
         // 移除esri log
         view.ui._removeComponents(['attribution'])
-        //移除缩放图标
-        view.ui.remove("zoom")
+        // 移除缩放图标
+        view.ui.remove('zoom')
 
         this.map = map
         this.view = view
@@ -412,10 +411,10 @@ export default {
       }
     },
     initSingleDirectionParam () {
-      this.view = null                  // 视图
-      this.map = null                   // 地图
-      this.watchId = null               // 定位id
-      this.currentInspectorId = 0       // 当前巡检人
+      this.view = null // 视图
+      this.map = null // 地图
+      this.watchId = null // 定位id
+      this.currentInspectorId = 0 // 当前巡检人
     }
   },
   created () {

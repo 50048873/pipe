@@ -52,7 +52,6 @@
 </template>
 
 <script>
-/* eslint-disable */
 import ProgressBar from '@/components/ProgressBar'
 export default {
   components: {

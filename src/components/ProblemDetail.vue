@@ -157,11 +157,13 @@
     </div>
     <h3 v-if="data.file && data.file.length">现场照片</h3>
     <photo :photos="data.file" v-if="data.file && data.file.length"></photo>
+    <display-polygon></display-polygon>
   </div>
 </template>
 
 <script>
 import Photo from '@/components/Photo'
+import DisplayPolygon from '@/components/DisplayPolygon'
 import {getServerErrorMessageAsHtml} from 'hui/lib/util.js'
 import * as api from '@/assets/js/api'
 import {success} from '@/assets/js/config'
@@ -173,7 +175,8 @@ export default {
     }
   },
   components: {
-    Photo
+    Photo,
+    DisplayPolygon
   },
   data () {
     return {

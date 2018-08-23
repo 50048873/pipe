@@ -69,14 +69,12 @@
 </template>
 
 <script>
-/* eslint-disable */
 import * as esriLoader from 'esri-loader'
 import {options} from '@/assets/js/config'
 import {getTiandituMap} from '@/assets/js/util'
-import {toKilometre, dateFormat} from '@/assets/js/mixin'
+import {toKilometre, dateFormat, calDistance, markPoint} from '@/assets/js/mixin'
 import * as api from '@/assets/js/api'
 import {mapGetters, mapMutations} from 'vuex'
-import {calDistance, markPoint} from '@/assets/js/mixin'
 export default {
   data () {
     return {
@@ -160,7 +158,7 @@ export default {
       // 加载天地图
       var map = await getTiandituMap()
       let [MapView] = await esriLoader.loadModules([
-        'esri/views/MapView',
+        'esri/views/MapView'
       ], options)
 
       // 创建MapView
@@ -177,8 +175,8 @@ export default {
 
       // 移除esri log
       view.ui._removeComponents(['attribution'])
-      //移除缩放图标
-      view.ui.remove("zoom")
+      // 移除缩放图标
+      view.ui.remove('zoom')
 
       this.map = map
       this.view = view
@@ -307,9 +305,9 @@ export default {
     },
     handleInspecting (position) {
       esriLoader.loadModules([
-        "esri/Graphic",
-        "esri/geometry/geometryEngine",
-        "esri/geometry/Polyline"
+        'esri/Graphic',
+        'esri/geometry/geometryEngine',
+        'esri/geometry/Polyline'
       ], options).then(([Graphic, geometryEngine, Polyline]) => {
         // console.log('handleInspecting', position)
         let longitude = position.coords.longitude
@@ -321,33 +319,33 @@ export default {
         this.set_inspectedPathInfo({longitude, latitude, accuracy, time})
 
         // First create a line geometry (this is the Keystone pipeline)
-        var polyline = {                 // 自己的巡检路径
-          type: "polyline",  // autocasts as new Polyline()
+        var polyline = { // 自己的巡检路径
+          type: 'polyline', // autocasts as new Polyline()
           paths: this.inspectedPathCoord
-        };
+        }
 
         // Create a symbol for drawing the line
         var lineSymbol = {
-          type: "simple-line",  // autocasts as SimpleLineSymbol()
+          type: 'simple-line', // autocasts as SimpleLineSymbol()
           color: [255, 0, 0],
           width: 3
-        };
+        }
 
         // Create an object for storing attributes related to the line
         var lineAtt = {
-          Name: "Keystone Pipeline",
-          Owner: "TransCanada",
-          Length: "3,456 km"
-        };
+          Name: 'Keystone Pipeline',
+          Owner: 'TransCanada',
+          Length: '3,456 km'
+        }
 
         var polylineGraphic = new Graphic({
           geometry: polyline,
           symbol: lineSymbol,
           attributes: lineAtt
-        });
+        })
 
         // Add the line graphic to the view's GraphicsLayer
-        this.view.graphics.add(polylineGraphic);
+        this.view.graphics.add(polylineGraphic)
 
         // 计算已走线路长度
         var paths = this.inspectedPathCoord
@@ -355,7 +353,7 @@ export default {
         if (len > 1) {
           var startPoint = paths[len - 2]
           var endPoint = paths[len - 1]
-          this.calDistance(startPoint, endPoint, "meters")
+          this.calDistance(startPoint, endPoint, 'meters')
             .then((distance) => {
               this.tableData.distance += distance
             })
@@ -400,37 +398,37 @@ export default {
     },
     registerPopup () {
       this.view.on('click', (event) => {
-          event.stopPropagation()
-          console.log(event)
-          let screenPoint = {
-            x: event.x,
-            y: event.y
-          }
-          let mapPoint = event.mapPoint
-          this.view.hitTest(screenPoint)
-            .then((res) => {
-              console.log(res)
-              let info = res.results[0]
-              if (info && info.graphic && info.graphic.attributes) {
-                info = info.graphic.attributes
-              }
-              if (!info.isHiddenTrouble) return
-              this.view.popup.open({
-                  // currentDockPosition: 'bottom-center',
-                  dockEnabled: true,
-                  dockOptions: {
-                    // Disables the dock button from the popup
-                    buttonEnabled: true,
-                    // Ignore the default sizes that trigger responsive docking
-                    breakpoint: {
-                      width: 320
-                    },
-                    position: 'top-center'
-                  },
-                  // Set the popup's title to the coordinates of the clicked location
-                  title: "隐患信息",
-                  location: mapPoint, // Set the location of the popup to the clicked location,
-                  content: `<table class="popup-table">
+        event.stopPropagation()
+        console.log(event)
+        let screenPoint = {
+          x: event.x,
+          y: event.y
+        }
+        let mapPoint = event.mapPoint
+        this.view.hitTest(screenPoint)
+          .then((res) => {
+            console.log(res)
+            let info = res.results[0]
+            if (info && info.graphic && info.graphic.attributes) {
+              info = info.graphic.attributes
+            }
+            if (!info.isHiddenTrouble) return
+            this.view.popup.open({
+              // currentDockPosition: 'bottom-center',
+              dockEnabled: true,
+              dockOptions: {
+                // Disables the dock button from the popup
+                buttonEnabled: true,
+                // Ignore the default sizes that trigger responsive docking
+                breakpoint: {
+                  width: 320
+                },
+                position: 'top-center'
+              },
+              // Set the popup's title to the coordinates of the clicked location
+              title: '隐患信息',
+              location: mapPoint, // Set the location of the popup to the clicked location,
+              content: `<table class="popup-table">
                     <tbody>
                       <tr>
                         <td>隐患时间：</td>
@@ -452,9 +450,9 @@ export default {
                       </tr>
                     </tbody>
                   </table>`
-              });
             })
-        })
+          })
+      })
     },
     markMultiSignPoint (coords) {
       let len = coords && coords.length
@@ -497,7 +495,7 @@ export default {
     },
     addOtherInspectorName1 (res) {
       esriLoader.loadModules([
-        "esri/geometry/Point"
+        'esri/geometry/Point'
       ], options).then(([Point]) => {
         if (this.firstLoadName) {
           res.forEach((item) => {
@@ -534,13 +532,13 @@ export default {
       return arr
     },
     initSingleDirectionParam () {
-      this.view = null                  // 视图
-      this.map = null                   // 地图
-      this.watchId = null               // 定位id
-      this.startPointIsMarked = false   // 是否已标记起点
-      this.interval = null              // 其他巡检人id
-      this.noInspectPath = []           // 自己的非巡检路径
-      this.inspectedPathCoord = [           // 自己的巡检路径
+      this.view = null // 视图
+      this.map = null // 地图
+      this.watchId = null // 定位id
+      this.startPointIsMarked = false // 是否已标记起点
+      this.interval = null // 其他巡检人id
+      this.noInspectPath = [] // 自己的非巡检路径
+      this.inspectedPathCoord = [ // 自己的巡检路径
         // [114.360694, 30.584929],
         // [114.360809, 30.585959]
       ]
