@@ -7,7 +7,6 @@ import {
 } from 'hui/lib/util.js'
 import moment from 'moment'
 import * as esriLoader from 'esri-loader'
-import {options} from '@/assets/js/config'
 
 export let getStaticPath = {
   methods: {
@@ -72,7 +71,7 @@ export let calDistance = {
       return esriLoader.loadModules([
         'esri/geometry/geometryEngine',
         'esri/geometry/Polyline'
-      ], options).then(([geometryEngine, Polyline]) => {
+      ], window.DSE.options).then(([geometryEngine, Polyline]) => {
         var line = new Polyline()
         line.addPath([point1, point2])
         var distance = 0
@@ -107,7 +106,7 @@ export let markPoint = {
     markPoint ({coord, pointType = 'point', SymbolType = 'picture-marker', svg, width, height, attributes}) {
       esriLoader.loadModules([
         'esri/Graphic'
-      ], options).then(([Graphic]) => {
+      ], window.DSE.options).then(([Graphic]) => {
         let longitude = coord.longitude
         let latitude = coord.latitude
 
@@ -119,11 +118,12 @@ export let markPoint = {
         }
 
         // Create a symbol for drawing the point
+        const path = process.env.NODE_ENV === 'development' ? '/static/svg/' : './static/svg/'
         var markerSymbol = {
           type: SymbolType, // autocasts as new PictureMarkerSymbol()
           width: width,
           height: height,
-          url: '/static/svg/' + svg
+          url: path + svg
         }
 
         // Create a graphic and add the geometry and symbol to it

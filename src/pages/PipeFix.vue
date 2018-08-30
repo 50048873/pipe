@@ -70,11 +70,12 @@
 
 <script>
 import * as esriLoader from 'esri-loader'
-import {options} from '@/assets/js/config'
+import {success} from '@/assets/js/config'
 import {getTiandituMap} from '@/assets/js/util'
 import {toKilometre, dateFormat, calDistance, markPoint} from '@/assets/js/mixin'
 import * as api from '@/assets/js/api'
 import {mapGetters, mapMutations} from 'vuex'
+import {getServerErrorMessageAsHtml} from 'hui/lib/util.js'
 export default {
   data () {
     return {
@@ -114,20 +115,6 @@ export default {
         return
       }
 
-      // if (!this.firstClickStartInspect) {
-      //   this.firstClickStartInspect = true
-      //   this.$router.push({name: 'PipeFixInspectTask'})
-      // } else if (!this.checkedTask.length) {
-      //   this.$message({
-      //     content: '请先选择巡检任务',
-      //     time: 1000,
-      //     closed: () => {
-      //       this.$router.push({name: 'PipeFixInspectTask'})
-      //     }
-      //   })
-      //   return
-      // }
-
       this.inspecting = !this.inspecting
 
       this.addHiddenTroubleAndSignBtn = true
@@ -159,7 +146,7 @@ export default {
       var map = await getTiandituMap()
       let [MapView] = await esriLoader.loadModules([
         'esri/views/MapView'
-      ], options)
+      ], window.DSE.options)
 
       // 创建MapView
       var view = new MapView({
@@ -182,11 +169,11 @@ export default {
       this.view = view
 
       // 获取签到点
-      let signPoint = await api.getSignPoint()
+      this.signPoint = await api.getSignPoint()
       // 标记签到点
-      this.markMultiSignPoint(signPoint)
+      this.markMultiSignPoint(this.signPoint)
       // mutation签到点
-      this.set_signPoint(signPoint)
+      this.set_signPoint(this.signPoint)
 
       // 获取隐患点
       let hiddenTroubleCoords = await api.gethiddenTrouble()
@@ -230,19 +217,19 @@ export default {
       // 标记其他巡检人初始位置
       this.markMultiInspector(firstInfo)
 
-      this.interval = setInterval(() => {
-        this.getOtherInspectorInfo()
-          .then((res) => {
-            // 清除其他巡检人之前的位置
-            let arr = this.view.graphics.items.filter((graphic) => {
-              return graphic.attributes && graphic.attributes.name && graphic.attributes.id !== this.currentInspectorId
-            })
-            this.view.graphics.removeMany(arr)
+      // this.interval = setInterval(() => {
+      //   this.getOtherInspectorInfo()
+      //     .then((res) => {
+      //       // 清除其他巡检人之前的位置
+      //       let arr = this.view.graphics.items.filter((graphic) => {
+      //         return graphic.attributes && graphic.attributes.name && graphic.attributes.id !== this.currentInspectorId
+      //       })
+      //       this.view.graphics.removeMany(arr)
 
-            // 标记其他巡检人新的位置
-            this.markMultiInspector(res)
-          })
-      }, 3000)
+      //       // 标记其他巡检人新的位置
+      //       this.markMultiInspector(res)
+      //     })
+      // }, 3000)
     },
     watchPositionNoInspect () {
       if (navigator.geolocation) {
@@ -303,13 +290,52 @@ export default {
         })
       }
     },
+    async getCanSignPointInfo (longitude, latitude) {
+      let arr = []
+      for (let item of this.signPoint) {
+        let distance = await this.calDistance([longitude, latitude], [item.longitude, item.latitude])
+        if (distance <= this.canSignDistance) {
+          arr.push({longitude, latitude})
+        }
+      }
+      return arr
+    },
+    async handleSign (longitude, latitude) {
+      let coords = await this.getCanSignPointInfo(longitude, latitude)
+      if (!coords.length) return
+      coords.map((item) => {
+        this.addSign(item)
+      })
+    },
+    addSign (coord) {
+      let params = new FormData()
+      params.append('pointCode', JSON.stringify(coord))
+      api.addSign(params)
+        .then((res) => {
+          if (typeof res === 'string') {
+            res = JSON.parse(res)
+          }
+          if (res.status === success) {
+            console.log(res)
+            this.$message({
+              content: res.msg + '，自动签到成功',
+              time: 400
+            })
+          } else {
+            this.$message({
+              content: res.msg
+            })
+          }
+        }, (err) => {
+          this.$message({content: getServerErrorMessageAsHtml(err, 'PipeFixSign.vue->save'), icon: 'hui-icon-warn'})
+        })
+    },
     handleInspecting (position) {
       esriLoader.loadModules([
         'esri/Graphic',
         'esri/geometry/geometryEngine',
         'esri/geometry/Polyline'
-      ], options).then(([Graphic, geometryEngine, Polyline]) => {
-        // console.log('handleInspecting', position)
+      ], window.DSE.options).then(([Graphic, geometryEngine, Polyline]) => {
         let longitude = position.coords.longitude
         let latitude = position.coords.latitude
         let accuracy = position.coords.accuracy
@@ -391,6 +417,8 @@ export default {
           svg: 'inspector-me.svg'
         })
         this.view.goTo([longitude, latitude])
+
+        this.handleSign(longitude, latitude)
       })
     },
     error (error) {
@@ -496,7 +524,7 @@ export default {
     addOtherInspectorName1 (res) {
       esriLoader.loadModules([
         'esri/geometry/Point'
-      ], options).then(([Point]) => {
+      ], window.DSE.options).then(([Point]) => {
         if (this.firstLoadName) {
           res.forEach((item) => {
             let mapPoint = new Point({
@@ -538,12 +566,11 @@ export default {
       this.startPointIsMarked = false // 是否已标记起点
       this.interval = null // 其他巡检人id
       this.noInspectPath = [] // 自己的非巡检路径
-      this.inspectedPathCoord = [ // 自己的巡检路径
-        // [114.360694, 30.584929],
-        // [114.360809, 30.585959]
-      ]
+      this.inspectedPathCoord = [] // 自己的巡检路径
       this.firstLoadName = false
-      // this.firstClickStartInspect = false // 是否第一次点开始巡检
+      this.inspectingRecord = []
+      this.distance = null
+      this.canSignDistance = 50
     }
   },
   created () {

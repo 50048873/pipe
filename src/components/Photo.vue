@@ -9,24 +9,6 @@
 </template>
 
 <script>
-import {getItem} from '@/assets/js/session'
-// let photos = [
-//   {
-//     fileCompress: '/static/img/example-1.jpg'
-//   },
-//   {
-//     fileCompress: '/static/img/example-1.jpg'
-//   },
-//   {
-//     fileCompress: '/static/img/example-1.jpg'
-//   },
-//   {
-//     fileCompress: '/static/img/example-1.jpg'
-//   },
-//   {
-//     fileCompress: '/static/img/example-1.jpg'
-//   }
-// ]
 export default {
   props: {
     photos: {
@@ -38,10 +20,8 @@ export default {
   },
   methods: {
     getBg (fileCompress) {
-      let filePathUrl = 'http://10.100.50.76:8280/upload' || getItem('filePathUrl')
       fileCompress = fileCompress.replace('\\', '/')
-      let url = filePathUrl + '/' + fileCompress
-      // console.log(url)
+      let url = window.DSE.photoUrl + '/' + fileCompress
       return {
         backgroundImage: `url(${url})`
       }

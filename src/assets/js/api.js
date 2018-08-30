@@ -1,22 +1,8 @@
 import $ from 'jquery'
-import {baseUrl} from '@/assets/js/config'
-
-/* 项目通用接口 */
-// 获取文件请求url地址
-export function getFilePathUrl () {
-  const url = 'filepath' + '/znb/CommonCtrl/getFilePathUrl.do'
-  return $.ajax({
-    type: 'GET',
-    url: url
-  })
-}
 
 // 巡检上报 -> 添加巡查隐患和其它
 export function addDanger (data) {
-  data.forEach((item, key) => {
-    console.log(key, ': ', item)
-  })
-  const url = baseUrl + '/pipe/DangerController/addDanger.do'
+  const url = window.DSE.baseUrl + '/pipe/DangerController/addDanger.do'
   return $.ajax({
     type: 'POST',
     contentType: false,
@@ -29,10 +15,7 @@ export function addDanger (data) {
 
 // 巡检上报 -> 在建工程和道路改造
 export function addPorject (data) {
-  data.forEach((item, key) => {
-    console.log(key, ': ', item)
-  })
-  const url = baseUrl + '/pipe/DangerController/addPorject.do'
+  const url = window.DSE.baseUrl + '/pipe/DangerController/addPorject.do'
   return $.ajax({
     type: 'POST',
     contentType: false,
@@ -45,7 +28,7 @@ export function addPorject (data) {
 
 // 巡检上报 -> 添加巡检区域（标面）
 export function addPlanArea (data) {
-  const url = baseUrl + '/pipe/InspectController/addPlanArea.do'
+  const url = window.DSE.baseUrl + '/pipe/InspectController/addPlanArea.do'
   return $.ajax({
     type: 'POST',
     url: url,
@@ -56,7 +39,7 @@ export function addPlanArea (data) {
 
 // 巡检工作 -> 巡检工作查询（巡检工作查询如果只传ID就是查询详情）
 export function getInspectData (data) {
-  const url = baseUrl + '/pipe/InspectController/getInspectData.do'
+  const url = window.DSE.baseUrl + '/pipe/InspectController/getInspectData.do'
   return $.ajax({
     type: 'POST',
     url: url,
@@ -67,10 +50,7 @@ export function getInspectData (data) {
 
 // 巡检签到
 export function addSign (data) {
-  data.forEach((item, key) => {
-    console.log(key, ': ', item)
-  })
-  const url = baseUrl + '/pipe/SignController/addSign.do'
+  const url = window.DSE.baseUrl + '/pipe/SignController/addSign.do'
   return $.ajax({
     type: 'POST',
     contentType: false,
@@ -81,9 +61,21 @@ export function addSign (data) {
   })
 }
 
+// getSessionUser
+export function getSessionUser () {
+  const url = window.DSE.baseUserUrl + '/znb/sysController/getSessionUser.do'
+  return $.ajax({
+    type: 'GET',
+    url: url,
+    xhrFields: {
+      withCredentials: true
+    }
+  })
+}
+
 // 获取签到点
 export function getSignPoint () {
-  const url = '/static/signPoint.json'
+  const url = process.env.NODE_ENV === 'development' ? '/static/signPoint.json' : './static/signPoint.json'
   return $.ajax({
     type: 'GET',
     url: url
@@ -92,7 +84,7 @@ export function getSignPoint () {
 
 // 获取隐患信息
 export function gethiddenTrouble () {
-  const url = '/static/hiddenTrouble.json'
+  const url = process.env.NODE_ENV === 'development' ? '/static/hiddenTrouble.json' : './static/hiddenTrouble.json'
   return $.ajax({
     type: 'GET',
     url: url
@@ -101,7 +93,7 @@ export function gethiddenTrouble () {
 
 // 获取巡检人信息
 export function getInspector () {
-  const url = '/static/inspector.json'
+  const url = process.env.NODE_ENV === 'development' ? '/static/inspector.json' : './static/inspector.json'
   return $.ajax({
     type: 'GET',
     url: url

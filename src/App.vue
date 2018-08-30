@@ -1,6 +1,5 @@
 <template>
   <div id="app">
-    <!-- <iframe v-if="baseUrl === '/api'" src="http://www.whdse.cn:56015/cas-server/login?service=http://www.whdse.cn:56015/znb/index.html" frameborder="0"></iframe> -->
     <hui-routerview-slide></hui-routerview-slide>
     <hui-nav3 :data="nav3Data" v-show="isVisible"></hui-nav3>
   </div>
@@ -8,9 +7,6 @@
 
 <script>
 import * as api from '@/assets/js/api'
-import {success} from '@/assets/js/config'
-import {getServerErrorMessageAsHtml} from 'hui/lib/util.js'
-import {setItem} from '@/assets/js/session'
 let nav3Data = [
   {
     title: '首页',
@@ -41,32 +37,22 @@ export default {
     }
   },
   methods: {
-    getFilePathUrl () {
-      api.getFilePathUrl()
+    getSessionUser () {
+      api.getSessionUser()
         .then((res) => {
-          if (typeof res === 'string') {
-            res = JSON.parse(res)
-          }
-          if (res.status === success) {
-            if (res.data && res.data.filePathUrl) {
-              setItem('filePathUrl', res.data.filePathUrl)
-            }
-          } else {
-            this.$message({
-              content: res.msg
-            })
-          }
+          console.log(res)
+          // if (res && res.divisionIds){
+          //   setItem("sourceList",JSON.stringify(res.resourceIds))
+          //   setItem("username",res.name)
+          //   return true
+          // }
         }, (err) => {
-          this.$message({
-            content: getServerErrorMessageAsHtml(err, 'App.vue -> getFilePathUrl'),
-            icon: 'hui-icon-warn'
-          })
+          console.log(err)
         })
     }
   },
   created () {
-    this.getFilePathUrl()
-    this.baseUrl = process.env.API_HOST
+    this.getSessionUser()
   },
   watch: {
     '$route' (to, from) {

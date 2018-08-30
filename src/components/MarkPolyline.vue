@@ -15,7 +15,6 @@
 
 <script>
 import * as esriLoader from 'esri-loader'
-import {options} from '@/assets/js/config'
 import {getTiandituMap, labelLength} from '@/assets/js/util'
 export default {
   methods: {
@@ -43,7 +42,7 @@ export default {
         'esri/geometry/geometryEngine',
 
         'dojo/domReady!'
-      ], options).then(async ([Map, MapView, Draw, Graphic, Polyline, geometryEngine]) => {
+      ], window.DSE.options).then(async ([Map, MapView, Draw, Graphic, Polyline, geometryEngine]) => {
         var _this = this
 
         // 创建MapView

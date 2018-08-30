@@ -19,13 +19,6 @@ module.exports = {
           '^/api': '/'
         }
       },
-      '/filepath': {
-        target: "http://www.whdse.cn:56015",
-        changeOrigin: true,
-        pathRewrite: {
-          '^/filepath': '/'
-        }
-      },
       "/arcgis_js_api/": {
         target: "http://10.100.3.213:8096",
         changeOrigin: true
@@ -70,13 +63,13 @@ module.exports = {
     // Paths
     assetsRoot: path.resolve(__dirname, '../dist'),
     assetsSubDirectory: 'static',
-    assetsPublicPath: '/',
+    assetsPublicPath: './',
 
     /**
      * Source Maps
      */
 
-    productionSourceMap: true,
+    productionSourceMap: false,
     // https://webpack.js.org/configuration/devtool/#production
     devtool: '#source-map',
 

@@ -15,6 +15,19 @@
         </div>
       </div>
       <div class="item-group line-bottom">
+        <h6>隐患类型<span class="required color-red">*</span></h6>
+        <div>
+          <select name="" id="">
+            <option value="0">暗漏</option>
+            <option value="1">爆管</option>
+            <option value="2">管网压占</option>
+            <option value="3">附属设备问题</option>
+            <option value="4">检查井问题</option>
+            <option value="5">其他</option>
+          </select>
+        </div>
+      </div>
+      <div class="item-group line-bottom">
         <h6>设备编号</h6>
         <div>
           <input type="text" name="deviceCode" placeholder="请输入设备编号" v-model="params.deviceCode" pattern="[a-zA-Z0-9_-]*">

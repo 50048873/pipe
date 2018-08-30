@@ -1,5 +1,4 @@
 import * as esriLoader from 'esri-loader'
-import {options} from '@/assets/js/config'
 
 export function getTiandituMap () {
   return esriLoader.loadModules([
@@ -9,7 +8,7 @@ export function getTiandituMap () {
     'esri/layers/WebTileLayer',
     'esri/layers/support/TileInfo',
     'esri/layers/FeatureLayer'
-  ], options).then(([config, Map, MapView, WebTileLayer, TileInfo, FeatureLayer]) => {
+  ], window.DSE.options).then(([config, Map, MapView, WebTileLayer, TileInfo, FeatureLayer]) => {
     // 首先我们设定瓦片信息，天地图经纬度地图的切片信息全部使用该信息设定
     var tileInfo = new TileInfo({
       dpi: 90.71428571427429,

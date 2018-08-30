@@ -4,7 +4,6 @@
 
 <script>
 import * as esriLoader from 'esri-loader'
-import {options} from '@/assets/js/config'
 import {getTiandituMap, labelLength} from '@/assets/js/util'
 export default {
   methods: {
@@ -21,7 +20,7 @@ export default {
         'esri/geometry/geometryEngine',
 
         'dojo/domReady!'
-      ], options).then(([Draw, Map, MapView, Graphic, Polyline, geometryEngine]) => {
+      ], window.DSE.options).then(([Draw, Map, MapView, Graphic, Polyline, geometryEngine]) => {
         // 创建MapView
         var view = new MapView({
           container: 'view_markPolygon',

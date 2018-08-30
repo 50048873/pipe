@@ -202,6 +202,7 @@ export default {
 <style scoped lang="less">
   @import '../assets/less/variable.less';
   .message {
+    z-index: 9;
     .searchWrap {
       margin: 10px 15px;
     }
