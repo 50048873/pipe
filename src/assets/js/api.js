@@ -63,7 +63,7 @@ export function addSign (data) {
 
 // getSessionUser
 export function getSessionUser () {
-  const url = window.DSE.baseUserUrl + '/znb/sysController/getSessionUser.do'
+  const url = window.DSE.baseUrl + '/pipe/sysController/getSessionUser.do'
   return $.ajax({
     type: 'GET',
     url: url,

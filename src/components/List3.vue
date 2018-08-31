@@ -16,7 +16,7 @@
         <div class="thumbnail">
           <ul>
             <li v-for="(photo, index) in item.photos" :key="index">
-              <img height="60px" v-lazy="photo.thumb" alt="">
+              <img height="60px" v-lazy="photo.thumb" alt="" @click="previewBigImage(index, photo.thumb)">
             </li>
           </ul>
         </div>
@@ -39,6 +39,11 @@ export default {
     }
   },
   mixins: [replaceSomeCharacter],
+  methods: {
+    previewBigImage (index, backgroundImage) {
+      this.$emit('image-click', index, backgroundImage)
+    }
+  },
   created () {
     this.filePathUrl = getItem('filePathUrl')
     // v-lazy = "filePathUrl + _replaceSomeCharacter(photo.thumb, '\\', '/')"
