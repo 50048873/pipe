@@ -50,14 +50,17 @@ export function getInspectData (data) {
 
 // 巡检签到
 export function addSign (data) {
-  const url = window.DSE.baseUrl + '/pipe/SignController/addSign.do'
+  const url = window.DSE.baseUrl + '/pipe/SignController/addSignInfo.do'
   return $.ajax({
     type: 'POST',
     contentType: false,
     processData: false,
     cache: false,
     url: url,
-    data: data
+    data: data,
+    xhrFields: {
+      withCredentials: true
+    }
   })
 }
 

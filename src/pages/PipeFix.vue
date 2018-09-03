@@ -99,7 +99,7 @@ export default {
     }
   },
   methods: {
-    ...mapMutations(['set_signPoint', 'set_inspectedPathInfo']),
+    ...mapMutations(['set_signPoint', 'set_inspectedPathInfo', 'set_signPoint_isSigned']),
     checked (checkedTask) {
       this.checkedTask = checkedTask
     },
@@ -268,7 +268,7 @@ export default {
           latitude
         },
         attributes: {
-          id: 0
+          id: 1
         },
         svg: 'inspector-me.svg'
       })
@@ -291,32 +291,37 @@ export default {
       }
     },
     async getCanSignPointInfo (longitude, latitude) {
-      let arr = []
+      let info = {
+        willSignPoint: [],
+        myCoord: []
+      }
       for (let item of this.signPoint) {
         let distance = await this.calDistance([longitude, latitude], [item.longitude, item.latitude])
         if (distance <= this.canSignDistance) {
-          arr.push({longitude, latitude})
+          info.willSignPoint.push(item)
+          info.myCoord.push({longitude, latitude})
         }
       }
-      return arr
+      return info
     },
     async handleSign (longitude, latitude) {
-      let coords = await this.getCanSignPointInfo(longitude, latitude)
-      if (!coords.length) return
-      coords.map((item) => {
+      let info = await this.getCanSignPointInfo(longitude, latitude)
+      if (!info.willSignPoint.length) return
+      info.willSignPoint.map((item) => {
         this.addSign(item)
       })
     },
-    addSign (coord) {
+    addSign (signInfo) {
+      if (signInfo.isSigned) return
       let params = new FormData()
-      params.append('pointCode', JSON.stringify(coord))
+      params.append('pointCode', JSON.stringify(signInfo))
       api.addSign(params)
         .then((res) => {
           if (typeof res === 'string') {
             res = JSON.parse(res)
           }
           if (res.status === success) {
-            console.log(res)
+            this.reDrawSignPoint(signInfo)
             this.$message({
               content: res.msg + '，自动签到成功',
               time: 400
@@ -327,8 +332,57 @@ export default {
             })
           }
         }, (err) => {
-          this.$message({content: getServerErrorMessageAsHtml(err, 'PipeFixSign.vue->save'), icon: 'hui-icon-warn'})
+          this.$message({content: getServerErrorMessageAsHtml(err, 'PipeFix.vue->save'), icon: 'hui-icon-warn'})
         })
+    },
+    reDrawSignPoint (signInfo) {
+      this.set_signPoint_isSigned(signInfo)
+
+      let graphic = this.view.graphics.items.find((graphic) => {
+        if (graphic.attributes) {
+          return graphic.attributes.id === signInfo.id
+        }
+      })
+      this.view.graphics.remove(graphic)
+      this.markPoint({
+        width: '26px',
+        height: '26px',
+        coord: {
+          longitude: signInfo.longitude,
+          latitude: signInfo.latitude
+        },
+        svg: 'flag-green.svg'
+      })
+    },
+    drawLine (Graphic) {
+      // First create a line geometry (this is the Keystone pipeline)
+      var polyline = { // 自己的巡检路径
+        type: 'polyline', // autocasts as new Polyline()
+        paths: this.inspectedPathCoord
+      }
+
+      // Create a symbol for drawing the line
+      var lineSymbol = {
+        type: 'simple-line', // autocasts as SimpleLineSymbol()
+        color: [255, 0, 0],
+        width: 3
+      }
+
+      // Create an object for storing attributes related to the line
+      var lineAtt = {
+        Name: 'Keystone Pipeline',
+        Owner: 'TransCanada',
+        Length: '3,456 km'
+      }
+
+      var polylineGraphic = new Graphic({
+        geometry: polyline,
+        symbol: lineSymbol,
+        attributes: lineAtt
+      })
+
+      // Add the line graphic to the view's GraphicsLayer
+      this.view.graphics.add(polylineGraphic)
     },
     handleInspecting (position) {
       esriLoader.loadModules([
@@ -344,39 +398,11 @@ export default {
         this.inspectedPathCoord.push([longitude, latitude])
         this.set_inspectedPathInfo({longitude, latitude, accuracy, time})
 
-        // First create a line geometry (this is the Keystone pipeline)
-        var polyline = { // 自己的巡检路径
-          type: 'polyline', // autocasts as new Polyline()
-          paths: this.inspectedPathCoord
-        }
-
-        // Create a symbol for drawing the line
-        var lineSymbol = {
-          type: 'simple-line', // autocasts as SimpleLineSymbol()
-          color: [255, 0, 0],
-          width: 3
-        }
-
-        // Create an object for storing attributes related to the line
-        var lineAtt = {
-          Name: 'Keystone Pipeline',
-          Owner: 'TransCanada',
-          Length: '3,456 km'
-        }
-
-        var polylineGraphic = new Graphic({
-          geometry: polyline,
-          symbol: lineSymbol,
-          attributes: lineAtt
-        })
-
-        // Add the line graphic to the view's GraphicsLayer
-        this.view.graphics.add(polylineGraphic)
-
         // 计算已走线路长度
         var paths = this.inspectedPathCoord
         var len = paths.length
         if (len > 1) {
+          this.drawLine(Graphic)
           var startPoint = paths[len - 2]
           var endPoint = paths[len - 1]
           this.calDistance(startPoint, endPoint, 'meters')
@@ -392,6 +418,9 @@ export default {
             width: '32px',
             height: '32px',
             coord: {longitude, latitude},
+            attributes: {
+              name: 'startPoint'
+            },
             svg: 'startPoint.svg'
           })
           this.startPointIsMarked = true
@@ -412,7 +441,7 @@ export default {
             latitude
           },
           attributes: {
-            id: 0
+            id: 1
           },
           svg: 'inspector-me.svg'
         })
@@ -571,6 +600,7 @@ export default {
       this.inspectingRecord = []
       this.distance = null
       this.canSignDistance = 50
+      this.signedPoint = []
     }
   },
   created () {

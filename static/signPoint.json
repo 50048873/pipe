@@ -1,12 +1,16 @@
 [
   {
+    "id": 6,
     "longitude": 114.36042987982836,
     "latitude": 30.58512173634147,
-    "signAddress": "山水有相逢酒店"
+    "signAddress": "山水有相逢酒店",
+    "isSigned": false
   },
   {
+    "id": 7,
     "longitude": 114.35983708114885,
     "latitude": 30.583854880702333,
-    "signAddress": "必胜客欢乐餐厅骏业餐厅"
+    "signAddress": "必胜客欢乐餐厅骏业餐厅",
+    "isSigned": false
   }
 ]

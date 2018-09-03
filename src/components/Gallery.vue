@@ -2,7 +2,7 @@
   <transition name="fade">
     <div class="Gallery" v-show="visible" @click.prevent="closeGallery">
       <span class="weui-gallery__img" :style="getImage()"></span>
-      <div class="weui-gallery__opr">
+      <div class="weui-gallery__opr" v-if="delIcon">
         <a href="javascript:" class="weui-gallery__del">
           <i class="hui-icon-bell weui-icon_gallery-delete extend-click" @click.prevent="deleteImage"></i>
         </a>
@@ -29,6 +29,10 @@ export default {
     index: {
       type: [Number, String],
       required: true
+    },
+    delIcon: {
+      type: Boolean,
+      default: false
     }
   },
   methods: {
