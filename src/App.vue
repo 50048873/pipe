@@ -40,12 +40,7 @@ export default {
     getSessionUser () {
       api.getSessionUser()
         .then((res) => {
-          console.log(res)
-          // if (res && res.divisionIds){
-          //   setItem("sourceList",JSON.stringify(res.resourceIds))
-          //   setItem("username",res.name)
-          //   return true
-          // }
+          // console.log(res)
         }, (err) => {
           console.log(err)
         })
